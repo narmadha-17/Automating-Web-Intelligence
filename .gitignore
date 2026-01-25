@@ -1,0 +1,22 @@
+# Keep your API keys and sensitive data secure
+.env
+
+# Node modules
+node_modules/
+
+# Exports directory
+exports/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

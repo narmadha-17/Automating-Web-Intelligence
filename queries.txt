@@ -1,0 +1,12 @@
+# Sample queries for web scraping automation
+# One query per line
+# Lines starting with # are comments and will be ignored
+
+Latest AI developments in 2026
+Web scraping best practices
+MongoDB performance optimization
+Tavily API features and capabilities
+Python automation techniques
+Machine learning trends
+Natural language processing advancements
+Cloud computing technologies
