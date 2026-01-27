@@ -1,22 +1,58 @@
-# Keep your API keys and sensitive data secure
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# Environment Variables
 .env
-
-# Node modules
-node_modules/
-
-# Exports directory
-exports/
-
-# Logs
-*.log
-npm-debug.log*
-
-# OS files
-.DS_Store
-Thumbs.db
+.env.local
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# MongoDB
+data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Old Node.js files (if any remain)
+node_modules/
+package-lock.json
