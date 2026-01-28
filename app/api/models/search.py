@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional, Literal
 from datetime import datetime
+from app.api.utils import validate_non_empty_list
 
 
 class SearchRequest(BaseModel):
@@ -28,15 +29,7 @@ class SearchRequest(BaseModel):
     @field_validator('queries')
     @classmethod
     def validate_queries(cls, v: List[str]) -> List[str]:
-        if not v:
-            raise ValueError("At least one query is required")
-        
-        valid_queries = [q.strip() for q in v if q and q.strip()]
-        
-        if not valid_queries:
-            raise ValueError("At least one non-empty query is required")
-        
-        return valid_queries
+        return validate_non_empty_list(v, "query")
     
     class Config:
         json_schema_extra = {

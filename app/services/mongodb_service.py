@@ -75,7 +75,7 @@ class MongoDBService:
             
             insert_result = await self.collection.insert_many(results)
             inserted_ids = [str(id) for id in insert_result.inserted_ids]
-            logger.info(f"✓ Inserted {len(inserted_ids)} search results into MongoDB")
+            logger.info(f" Inserted {len(inserted_ids)} search results into MongoDB")
             return inserted_ids
             
         except Exception as e:
@@ -101,10 +101,7 @@ class MongoDBService:
     async def get_stats(self) -> Dict[str, Any]:
 
         try:
-            # Total results
             total_count = await self.collection.count_documents({})
-            
-            # Results from last 24 hours
             yesterday = datetime.utcnow() - timedelta(days=1)
             recent_count = await self.collection.count_documents({
                 "timestamp": {"$gte": yesterday}

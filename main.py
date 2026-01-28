@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 
-from app.api.routes import search
+from app.api.routes import search, extract
 from app.services.mongodb_service import MongoDBService
 from app.core.config import settings
 
@@ -53,6 +53,7 @@ app.add_middleware(
 )
 
 app.include_router(search.router, prefix="/web_search", tags=["Search"])
+app.include_router(extract.router, prefix="/extract", tags=["Extract"])
 
 
 @app.get("/", tags=["Health"])

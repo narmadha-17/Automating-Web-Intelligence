@@ -80,6 +80,70 @@ class TavilyService:
             error_msg = f"Unexpected error: {str(e)}"
             logger.error(f"Unexpected error for query '{query}': {error_msg}")
             raise ValueError(error_msg)
+
+
+    async def extract(
+        self,
+        urls: list[str],
+        query: Optional[str] = None,
+        extract_depth: Optional[str] = None,
+        include_images: bool = False,
+        include_answer: bool = False
+    ) -> Dict[str, Any]:
+        if not self.api_key:
+            raise ValueError("TAVILY_API_KEY is not configured. Please set it in your .env file")
+        
+        logger.info(f"Extracting content from {len(urls)} URLs")
+        
+        payload = {
+            "api_key": self.api_key,
+            "urls": urls,
+            "query": query,
+            "extract_depth": extract_depth or "basic",
+            "include_images": include_images,
+            "include_answer": include_answer
+        }
+        
+        # Remove None values from payload
+        payload = {k: v for k, v in payload.items() if v is not None}
+        
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.post(
+                    f"{self.base_url}/extract",
+                    json=payload,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                response.raise_for_status()
+                
+                data = response.json()
+                result_count = len(data.get("results", []))
+                logger.info(f"Successfully extracted content from {result_count} URLs")
+                
+                return data
+                
+        except httpx.HTTPStatusError as e:
+            status_code = e.response.status_code
+            if status_code == 401:
+                error_msg = "Invalid Tavily API key."
+            elif status_code == 429:
+                error_msg = "Rate limit exceeded."
+            else:
+                error_msg = f"Tavily API error ({status_code}): {e.response.text}"
+            
+            logger.error(f"HTTP error during extraction: {error_msg}")
+            raise ValueError(error_msg)
+            
+        except httpx.RequestError as e:
+            error_msg = f"Request error: {str(e)}"
+            logger.error(f"Request error during extraction: {error_msg}")
+            raise ValueError(error_msg)
+            
+        except Exception as e:
+            error_msg = f"Unexpected error: {str(e)}"
+            logger.error(f"Unexpected error during extraction: {error_msg}")
+            raise ValueError(error_msg)
     
     async def batch_search(
         self,

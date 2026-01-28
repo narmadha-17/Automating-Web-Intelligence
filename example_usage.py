@@ -209,6 +209,51 @@ async def test_invalid_request():
     print()
 
 
+async def test_extraction():
+    """Test the extraction endpoint"""
+    print("=" * 60)
+    print("Testing URL Extraction")
+    print("=" * 60)
+    
+    request_data = {
+        "urls": ["https://en.wikipedia.org/wiki/Artificial_intelligence"],
+        "extract_depth": "advanced",
+        "include_answer": True
+    }
+    
+    print(f"Request: {json.dumps(request_data, indent=2)}\n")
+    
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        try:
+            response = await client.post(
+                f"{API_BASE_URL}/extract/",
+                json=request_data
+            )
+            
+            print(f"Status Code: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"\n✓ Extraction successful!")
+                print(f"Summary: {data['summary']}")
+                
+                if data['results']:
+                    result = data['results'][0]
+                    print(f"\nExtracted URL: {result['url']}")
+                    print(f"Title: {result.get('title')}")
+                    print(f"Content: {result['content'][:200]}...")
+                
+                if data.get('answer'):
+                    print(f"\nAI Answer: {data['answer'][:150]}...")
+            else:
+                print(f"Error: {response.text}")
+                
+        except Exception as e:
+            print(f"✗ Error: {e}")
+    
+    print()
+
+
 async def main():
     """Run all tests"""
     print("\n" + "=" * 60)
@@ -228,6 +273,7 @@ async def main():
     # Uncomment to test actual searches (requires Tavily API key and MongoDB)
     # await test_single_search()
     # await test_batch_search()
+    # await test_extraction()
     # await test_get_results()
     # await test_get_stats()
     
