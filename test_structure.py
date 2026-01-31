@@ -13,49 +13,49 @@ def test_imports():
     
     try:
         from app.core.config import settings
-        print("✓ Config module imported successfully")
+        print("??? Config module imported successfully")
         print(f"  - API Name: {settings.APP_NAME}")
         print(f"  - Port: {settings.PORT}")
         print(f"  - MongoDB URI: {settings.MONGODB_URI[:30]}...")
     except Exception as e:
-        print(f"✗ Failed to import config: {e}")
+        print(f"??? Failed to import config: {e}")
         return False
     
     try:
         from app.api.models.search import SearchRequest, SearchResponse
-        print("✓ Search models imported successfully")
+        print("??? Search models imported successfully")
     except Exception as e:
-        print(f"✗ Failed to import search models: {e}")
+        print(f"??? Failed to import search models: {e}")
         return False
     
     try:
         from app.services.tavily_service import tavily_service
-        print("✓ Tavily service imported successfully")
+        print("??? Tavily service imported successfully")
     except Exception as e:
-        print(f"✗ Failed to import Tavily service: {e}")
+        print(f"??? Failed to import Tavily service: {e}")
         return False
     
     try:
         from app.services.mongodb_service import mongodb_service
-        print("✓ MongoDB service imported successfully")
+        print("??? MongoDB service imported successfully")
     except Exception as e:
-        print(f"✗ Failed to import MongoDB service: {e}")
+        print(f"??? Failed to import MongoDB service: {e}")
         return False
     
     try:
         from app.api.routes.search import router
-        print("✓ Search router imported successfully")
+        print("??? Search router imported successfully")
     except Exception as e:
-        print(f"✗ Failed to import search router: {e}")
+        print(f"??? Failed to import search router: {e}")
         return False
     
     try:
         from main import app
-        print("✓ FastAPI app imported successfully")
+        print("??? FastAPI app imported successfully")
         print(f"  - Title: {app.title}")
         print(f"  - Version: {app.version}")
     except Exception as e:
-        print(f"✗ Failed to import FastAPI app: {e}")
+        print(f"??? Failed to import FastAPI app: {e}")
         return False
     
     return True
@@ -74,7 +74,7 @@ def test_validation():
             search_depth="advanced",
             max_results=5
         )
-        print("✓ Valid search request accepted")
+        print("??? Valid search request accepted")
         
         # Test validation - empty queries should fail
         try:
@@ -82,10 +82,10 @@ def test_validation():
                 queries=[],
                 search_depth="advanced"
             )
-            print("✗ Empty queries validation failed - should have raised error")
+            print("??? Empty queries validation failed - should have raised error")
             return False
         except ValueError:
-            print("✓ Empty queries correctly rejected")
+            print("??? Empty queries correctly rejected")
         
         # Test validation - invalid search depth should fail
         try:
@@ -93,15 +93,25 @@ def test_validation():
                 queries=["test"],
                 search_depth="invalid_depth"
             )
-            print("✗ Invalid search depth validation failed")
+            print("??? Invalid search depth validation failed")
             return False
         except ValueError:
-            print("✓ Invalid search depth correctly rejected")
+            print("??? Invalid search depth correctly rejected")
         
+        from app.api.models.crawl import CrawlRequest
+        
+        # Valid crawl request
+        valid_crawl = CrawlRequest(
+            url="https://docs.tavily.com",
+            instructions="Find all pages on the Python SDK",
+            max_depth=2
+        )
+        print("??? Valid crawl request accepted")
+
         return True
         
     except Exception as e:
-        print(f"✗ Validation test failed: {e}")
+        print(f"??? Validation test failed: {e}")
         return False
 
 
@@ -125,14 +135,14 @@ def main():
     print()
     print("=" * 60)
     if all_passed:
-        print("✓ All tests passed!")
+        print("??? All tests passed!")
         print()
         print("Next steps:")
         print("1. Ensure MongoDB is running: mongod")
         print("2. Start the server: uvicorn main:app --reload")
         print("3. Visit: http://localhost:8000/docs")
     else:
-        print("✗ Some tests failed")
+        print("??? Some tests failed")
     print("=" * 60)
     
     return 0 if all_passed else 1

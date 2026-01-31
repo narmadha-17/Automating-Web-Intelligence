@@ -18,11 +18,13 @@ class MongoDBService:
         return cls._instance
     
     def __init__(self):
-        self.uri = settings.MONGODB_URI
-        self.db_name = settings.MONGODB_DB_NAME
-        self.collection_name = settings.MONGODB_COLLECTION
-        self.db = None
-        self.collection = None
+        if not hasattr(self, 'initialized'):
+            self.uri = settings.MONGODB_URI
+            self.db_name = settings.MONGODB_DB_NAME
+            self.collection_name = settings.MONGODB_COLLECTION
+            self.db = None
+            self.collection = None
+            self.initialized = True
     
     async def connect(self):
 
@@ -138,6 +140,38 @@ class MongoDBService:
             
         except Exception as e:
             logger.error(f"Error searching by query: {e}")
+            raise
+
+    async def save_crawl_results(self, results: Dict[str, Any]) -> str:
+        """
+        Saves a crawl response to MongoDB.
+        """
+        try:
+            if "timestamp" not in results:
+                results["timestamp"] = datetime.utcnow()
+            results["type"] = "crawl"
+            
+            insert_result = await self.collection.insert_one(results)
+            logger.info(f"Inserted crawl results for base URL: {results.get('base_url')}")
+            return str(insert_result.inserted_id)
+        except Exception as e:
+            logger.error(f"Error saving crawl results: {e}")
+            raise
+
+    async def save_crawl_results(self, results: Dict[str, Any]) -> str:
+        """
+        Saves a crawl response to MongoDB.
+        """
+        try:
+            if "timestamp" not in results:
+                results["timestamp"] = datetime.utcnow()
+            results["type"] = "crawl"
+            
+            insert_result = await self.collection.insert_one(results)
+            logger.info(f"Inserted crawl results for base URL: {results.get('base_url')}")
+            return str(insert_result.inserted_id)
+        except Exception as e:
+            logger.error(f"Error saving crawl results: {e}")
             raise
 
 

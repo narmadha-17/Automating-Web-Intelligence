@@ -46,7 +46,6 @@ class SearchRequest(BaseModel):
 
 
 class SearchResultItem(BaseModel):
-
     title: str = Field(..., description="Title of the search result")
     url: str = Field(..., description="URL of the search result")
     content: str = Field(..., description="Content/snippet of the search result")
@@ -55,14 +54,12 @@ class SearchResultItem(BaseModel):
 
 
 class SearchMetadata(BaseModel):
-
     search_depth: str
     result_count: int
     searched_at: datetime
 
 
 class SingleSearchResult(BaseModel):
-
     query: str = Field(..., description="The search query")
     answer: str = Field(..., description="AI-generated answer")
     results: List[SearchResultItem] = Field(
@@ -79,13 +76,11 @@ class SearchSummary(BaseModel):
 
 
 class SearchError(BaseModel):
-
     query: str = Field(..., description="Query that failed")
     error: str = Field(..., description="Error message")
 
 
 class SearchResponse(BaseModel):
-
     results: List[SingleSearchResult] = Field(
         default_factory=list,
         description="List of search results for each query"
