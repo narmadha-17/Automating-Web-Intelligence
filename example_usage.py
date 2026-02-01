@@ -210,7 +210,6 @@ async def test_invalid_request():
 
 
 async def test_extraction():
-    """Test the extraction endpoint"""
     print("=" * 60)
     print("Testing URL Extraction")
     print("=" * 60)
@@ -254,6 +253,49 @@ async def test_extraction():
     print()
 
 
+async def test_crawl():
+    print("=" * 60)
+    print("Testing URL Crawling")
+    print("=" * 60)
+    
+    request_data = {
+        "url": "https://docs.tavily.com/welcome",
+        "instructions": "find all pages in python sdk",
+        "max_depth": 2,
+        "max_breadth": 20,
+        "limit": 10
+    }
+    
+    print(f"Request: {json.dumps(request_data, indent=2)}\n")
+    
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        try:
+            response = await client.post(
+                f"{API_BASE_URL}/crawl/",
+                json=request_data
+            )
+            
+            print(f"Status Code: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"\n✓ Crawl successful!")
+                print(f"Total results: {len(data.get('results', []))}")
+                
+                if data.get('results'):
+                    print(f"\nExample result:")
+                    result = data['results'][0]
+                    print(f"  URL: {result.get('url')}")
+                    print(f"  Title: {result.get('title')}")
+            else:
+                print(f"Error: {response.text}")
+                
+        except Exception as e:
+            print(f"✗ Error: {e}")
+    
+    print()
+
+
 async def main():
     """Run all tests"""
     print("\n" + "=" * 60)
@@ -263,7 +305,6 @@ async def main():
     print("Ensure the server is running: uvicorn main:app --reload")
     print("=" * 60 + "\n")
     
-    # Wait a moment
     await asyncio.sleep(1)
     
     # Run tests
@@ -274,6 +315,7 @@ async def main():
     # await test_single_search()
     # await test_batch_search()
     # await test_extraction()
+    await test_crawl()
     # await test_get_results()
     # await test_get_stats()
     

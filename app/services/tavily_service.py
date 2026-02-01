@@ -44,10 +44,14 @@ class TavilyService:
         
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.api_key}"
+                }
                 response = await client.post(
                     f"{self.base_url}/search",
                     json=payload,
-                    headers={"Content-Type": "application/json"}
+                    headers=headers
                 )
                 
                 response.raise_for_status()
@@ -104,15 +108,18 @@ class TavilyService:
             "include_answer": include_answer
         }
         
-        # Remove None values from payload
         payload = {k: v for k, v in payload.items() if v is not None}
         
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.api_key}"
+                }
                 response = await client.post(
                     f"{self.base_url}/extract",
                     json=payload,
-                    headers={"Content-Type": "application/json"}
+                    headers=headers
                 )
                 
                 response.raise_for_status()
@@ -160,6 +167,7 @@ class TavilyService:
         logger.info(f"Crawling URL: {url} with instructions: {instructions}")
         
         payload = {
+            "api_key": self.api_key,
             "url": url,
             "instructions": instructions,
             "max_depth": max_depth,
@@ -168,16 +176,14 @@ class TavilyService:
             **kwargs
         }
         
-        # Remove None values from payload
         payload = {k: v for k, v in payload.items() if v is not None}
-        
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}"
-        }
         
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.api_key}"
+                }
                 response = await client.post(
                     f"{self.base_url}/crawl",
                     json=payload,

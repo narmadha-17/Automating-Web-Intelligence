@@ -26,15 +26,13 @@ async def crawl(request: CrawlRequest) -> Any:
     try:
         logger.info(f"Received crawl request for URL: {request.url}")
         
-        # Prepare parameters for the service
         crawl_params = request.model_dump(exclude_none=True)
         url = crawl_params.pop("url")
         instructions = crawl_params.pop("instructions", None)
         max_depth = crawl_params.pop("max_depth", 1)
         max_breadth = crawl_params.pop("max_breadth", 50)
         limit = crawl_params.pop("limit", 10)
-        
-        # Call Tavily Service
+
         results = await tavily_service.crawl(
             url=url,
             instructions=instructions,
@@ -44,7 +42,6 @@ async def crawl(request: CrawlRequest) -> Any:
             **crawl_params
         )
         
-        # Store in MongoDB if possible
         try:
             await mongodb_service.save_crawl_results(results)
             logger.info(f"Stored crawl results for {request.url} in MongoDB")

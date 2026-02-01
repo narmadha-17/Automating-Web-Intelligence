@@ -1,6 +1,5 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from typing import List, Optional, Literal, Dict, Any
-from datetime import datetime
 
 class CrawlRequest(BaseModel):
     url: str = Field(..., description="The root URL to begin the crawl.")

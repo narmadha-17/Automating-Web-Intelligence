@@ -143,9 +143,6 @@ class MongoDBService:
             raise
 
     async def save_crawl_results(self, results: Dict[str, Any]) -> str:
-        """
-        Saves a crawl response to MongoDB.
-        """
         try:
             if "timestamp" not in results:
                 results["timestamp"] = datetime.utcnow()
@@ -159,12 +156,8 @@ class MongoDBService:
             raise
 
     async def save_crawl_results(self, results: Dict[str, Any]) -> str:
-        """
-        Saves a crawl response to MongoDB.
-        """
         try:
-            if "timestamp" not in results:
-                results["timestamp"] = datetime.utcnow()
+            results["timestamp"] = datetime.utcnow()
             results["type"] = "crawl"
             
             insert_result = await self.collection.insert_one(results)
