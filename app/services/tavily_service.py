@@ -222,7 +222,79 @@ class TavilyService:
             error_msg = f"Unexpected error during crawl: {str(e)}"
             logger.error(f"Unexpected error during crawl: {error_msg}")
             raise ValueError(error_msg)
-    
+
+    async def map(
+        self,
+        url: str,
+        instructions: Optional[str] = None,
+        max_depth: Optional[int] = 1,
+        max_breadth: Optional[int] = 50,
+        limit: Optional[int] = 10,
+        **kwargs
+    ) -> Dict[str, Any]:
+        if not self.api_key:
+            raise ValueError("TAVILY_API_KEY is not configured. Please set it in your .env file")
+        
+        logger.info(f"Mapping URL: {url} with instructions: {instructions}")
+        
+        payload = {
+            "api_key": self.api_key,
+            "url": url,
+            "instructions": instructions,
+            "max_depth": max_depth,
+            "max_breadth": max_breadth,
+            "limit": limit,
+            **kwargs
+        }
+        
+        payload = {k: v for k, v in payload.items() if v is not None}
+        
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.api_key}"
+                }
+                response = await client.post(
+                    f"{self.base_url}/map",
+                    json=payload,
+                    headers=headers
+                )
+                
+                response.raise_for_status()
+                
+                data = response.json()
+                result_count = len(data.get("results", []))
+                logger.info(f"Successfully mapped and found {result_count} items")
+                
+                return data
+                
+        except httpx.HTTPStatusError as e:
+            status_code = e.response.status_code
+            response_text = e.response.text
+            logger.error(f"Tavily API returned status {status_code}: {response_text}")
+            
+            if status_code == 401:
+                error_msg = f"Invalid Tavily API key: {response_text}"
+            elif status_code == 429:
+                error_msg = "Rate limit exceeded."
+            else:
+                error_msg = f"Tavily API error ({status_code}): {response_text}"
+            
+            logger.error(f"HTTP error during map: {error_msg}")
+            raise ValueError(error_msg)
+            
+        except httpx.RequestError as e:
+            error_msg = f"Request error: {str(e)}"
+            logger.error(f"Request error during map: {error_msg}")
+            raise ValueError(error_msg)
+            
+        except Exception as e:
+            error_msg = f"Unexpected error during map: {str(e)}"
+            logger.error(f"Unexpected error during map: {error_msg}")
+            raise ValueError(error_msg)
+
+
     async def batch_search(
         self,
         queries: list[str],

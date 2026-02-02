@@ -155,16 +155,16 @@ class MongoDBService:
             logger.error(f"Error saving crawl results: {e}")
             raise
 
-    async def save_crawl_results(self, results: Dict[str, Any]) -> str:
+    async def save_map_results(self, results: Dict[str, Any]) -> str:
         try:
             results["timestamp"] = datetime.utcnow()
-            results["type"] = "crawl"
+            results["type"] = "map"
             
             insert_result = await self.collection.insert_one(results)
-            logger.info(f"Inserted crawl results for base URL: {results.get('base_url')}")
+            logger.info(f"Inserted map results for base URL: {results.get('base_url')}")
             return str(insert_result.inserted_id)
         except Exception as e:
-            logger.error(f"Error saving crawl results: {e}")
+            logger.error(f"Error saving map results: {e}")
             raise
 
 
