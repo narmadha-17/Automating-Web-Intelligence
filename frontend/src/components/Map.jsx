@@ -3,8 +3,9 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8000';
 
-const Map = () => {
+const Map = ({ apiKey }) => {
     const [url, setUrl] = useState('');
+    const [instructions, setInstructions] = useState('');
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState(null);
     const [error, setError] = useState(null);
@@ -16,7 +17,11 @@ const Map = () => {
         try {
             const response = await axios.post(`${API_BASE_URL}/map/`, {
                 url: url.trim(),
-                include_images: false
+                instructions: instructions.trim() || undefined,
+                max_depth: 1,
+                max_breadth: 10,
+                limit: 5,
+                api_key: apiKey
             });
             setResults(response.data);
         } catch (err) {
@@ -41,6 +46,14 @@ const Map = () => {
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     required
+                />
+                <textarea
+                    className="input-glass"
+                    placeholder="Instructions (e.g. 'Only find blog posts')"
+                    value={instructions}
+                    onChange={(e) => setInstructions(e.target.value)}
+                    rows={2}
+                    style={{ resize: 'vertical' }}
                 />
                 <button type="submit" disabled={loading} className="btn-primary">
                     {loading ? 'Mapping...' : 'Generate Map'}

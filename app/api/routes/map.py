@@ -27,28 +27,27 @@ async def map_website(request: MapRequest) -> Any:
         logger.info(f"Received map request for URL: {request.url}")
         
         map_params = request.model_dump(exclude_none=True)
-        url = map_params.pop("url")
-        instructions = map_params.pop("instructions", None)
-        max_depth = map_params.pop("max_depth", 1)
-        max_breadth = map_params.pop("max_breadth", 50)
-        limit = map_params.pop("limit", 10)
-
-        results = await tavily_service.map(
-            url=url,
-            instructions=instructions,
-            max_depth=max_depth,
-            max_breadth=max_breadth,
-            limit=limit,
-            **map_params
+        map_data = await tavily_service.map(
+            url=request.url,
+            instructions=request.instructions,
+            max_depth=request.max_depth,
+            max_breadth=request.max_breadth,
+            limit=request.limit,
+            api_key=request.api_key,
+            include_images=request.include_images,
+            extract_depth=request.extract_depth,
+            format=request.format,
+            timeout=request.timeout,
+            include_usage=request.include_usage
         )
         
         try:
-            await mongodb_service.save_map_results(results)
+            await mongodb_service.save_map_results(map_data)
             logger.info(f"Stored map results for {request.url} in MongoDB")
         except Exception as e:
             logger.warning(f"Failed to save map results to MongoDB: {e}")
             
-        return results
+        return map_data
         
     except Exception as e:
         handle_api_error(e, context="map")

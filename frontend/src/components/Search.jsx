@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8000';
 
-const Search = () => {
+const Search = ({ apiKey }) => {
     const [queries, setQueries] = useState(['']);
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState(null);
@@ -25,7 +25,8 @@ const Search = () => {
             const response = await axios.post(`${API_BASE_URL}/web_search/search`, {
                 queries: queries.filter(q => q.trim() !== ''),
                 search_depth: 'advanced',
-                include_answer: true
+                include_answer: true,
+                api_key: apiKey
             });
             setResults(response.data);
         } catch (err) {

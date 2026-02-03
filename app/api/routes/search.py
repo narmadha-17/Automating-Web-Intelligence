@@ -41,7 +41,8 @@ async def search(request: SearchRequest) -> SearchResponse:
             queries=request.queries,
             search_depth=request.search_depth,
             max_results=request.max_results,
-            include_answer=request.include_answer
+            include_answer=request.include_answer,
+            api_key=request.api_key
         )
         if search_data["results"]:
             try:

@@ -4,7 +4,7 @@ import logging
 
 from app.api.models.crawl import CrawlRequest, CrawlResponse
 from app.services.tavily_service import tavily_service
-from app.services.mongodb_service import MongoDBService
+from app.services.mongodb_service import mongodb_service
 from app.api.errors import handle_api_error
 
 logger = logging.getLogger(__name__)
@@ -26,29 +26,27 @@ async def crawl(request: CrawlRequest) -> Any:
     try:
         logger.info(f"Received crawl request for URL: {request.url}")
         
-        crawl_params = request.model_dump(exclude_none=True)
-        url = crawl_params.pop("url")
-        instructions = crawl_params.pop("instructions", None)
-        max_depth = crawl_params.pop("max_depth", 1)
-        max_breadth = crawl_params.pop("max_breadth", 50)
-        limit = crawl_params.pop("limit", 10)
-
-        results = await tavily_service.crawl(
-            url=url,
-            instructions=instructions,
-            max_depth=max_depth,
-            max_breadth=max_breadth,
-            limit=limit,
-            **crawl_params
+        crawl_data = await tavily_service.crawl(
+            url=request.url,
+            instructions=request.instructions,
+            max_depth=request.max_depth,
+            max_breadth=request.max_breadth,
+            limit=request.limit,
+            api_key=request.api_key,
+            include_images=request.include_images,
+            extract_depth=request.extract_depth,
+            format=request.format,
+            include_favicon=request.include_favicon,
+            timeout=request.timeout
         )
         
         try:
-            await mongodb_service.save_crawl_results(results)
+            await mongodb_service.save_crawl_results(crawl_data)
             logger.info(f"Stored crawl results for {request.url} in MongoDB")
         except Exception as e:
             logger.warning(f"Failed to save crawl results to MongoDB: {e}")
             
-        return results
+        return crawl_data
         
     except Exception as e:
         handle_api_error(e, context="crawl")

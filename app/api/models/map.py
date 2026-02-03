@@ -17,6 +17,7 @@ class MapRequest(BaseModel):
     format: Literal["markdown", "text"] = Field("markdown", description="The format of the extracted web page content.")
     timeout: Optional[int] = Field(60, ge=10, le=150, description="Maximum time in seconds to wait for the map operation.")
     include_usage: bool = Field(False, description="Whether to include usage information in the response.")
+    api_key: Optional[str] = Field(None, description="Optional Tavily API key to use for this request")
    
 
 class MapResponse(BaseModel):

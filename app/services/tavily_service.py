@@ -24,16 +24,18 @@ class TavilyService:
         query: str,
         search_depth: Optional[str] = None,
         max_results: Optional[int] = None,
-        include_answer: bool = True
+        include_answer: bool = True,
+        api_key: Optional[str] = None
     ) -> Dict[str, Any]:
 
-        if not self.api_key:
-            raise ValueError("TAVILY_API_KEY is not configured. Please set it in your .env file")
+        active_key = api_key or self.api_key
+        if not active_key:
+            raise ValueError("Tavily API key is not configured. Please provide one or set it in your .env file")
         
         logger.info(f"Searching Tavily for: '{query}'")
         
         payload = {
-            "api_key": self.api_key,
+            "api_key": active_key,
             "query": query,
             "search_depth": search_depth or self.search_depth,
             "max_results": max_results or self.max_results,
@@ -46,7 +48,7 @@ class TavilyService:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 headers = {
                     "Content-Type": "application/json",
-                    "Authorization": f"Bearer {self.api_key}"
+                    "Authorization": f"Bearer {active_key}"
                 }
                 response = await client.post(
                     f"{self.base_url}/search",
@@ -92,15 +94,17 @@ class TavilyService:
         query: Optional[str] = None,
         extract_depth: Optional[str] = None,
         include_images: bool = False,
-        include_answer: bool = False
+        include_answer: bool = False,
+        api_key: Optional[str] = None
     ) -> Dict[str, Any]:
-        if not self.api_key:
-            raise ValueError("TAVILY_API_KEY is not configured. Please set it in your .env file")
+        active_key = api_key or self.api_key
+        if not active_key:
+            raise ValueError("Tavily API key is not configured. Please provide one or set it in your .env file")
         
         logger.info(f"Extracting content from {len(urls)} URLs")
         
         payload = {
-            "api_key": self.api_key,
+            "api_key": active_key,
             "urls": urls,
             "query": query,
             "extract_depth": extract_depth or "basic",
@@ -114,7 +118,7 @@ class TavilyService:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 headers = {
                     "Content-Type": "application/json",
-                    "Authorization": f"Bearer {self.api_key}"
+                    "Authorization": f"Bearer {active_key}"
                 }
                 response = await client.post(
                     f"{self.base_url}/extract",
@@ -159,15 +163,17 @@ class TavilyService:
         max_depth: Optional[int] = 1,
         max_breadth: Optional[int] = 50,
         limit: Optional[int] = 10,
+        api_key: Optional[str] = None,
         **kwargs
     ) -> Dict[str, Any]:
-        if not self.api_key:
-            raise ValueError("TAVILY_API_KEY is not configured. Please set it in your .env file")
+        active_key = api_key or self.api_key
+        if not active_key:
+            raise ValueError("Tavily API key is not configured. Please provide one or set it in your .env file")
         
         logger.info(f"Crawling URL: {url} with instructions: {instructions}")
         
         payload = {
-            "api_key": self.api_key,
+            "api_key": active_key,
             "url": url,
             "instructions": instructions,
             "max_depth": max_depth,
@@ -182,7 +188,7 @@ class TavilyService:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 headers = {
                     "Content-Type": "application/json",
-                    "Authorization": f"Bearer {self.api_key}"
+                    "Authorization": f"Bearer {active_key}"
                 }
                 response = await client.post(
                     f"{self.base_url}/crawl",
@@ -230,15 +236,17 @@ class TavilyService:
         max_depth: Optional[int] = 1,
         max_breadth: Optional[int] = 50,
         limit: Optional[int] = 10,
+        api_key: Optional[str] = None,
         **kwargs
     ) -> Dict[str, Any]:
-        if not self.api_key:
-            raise ValueError("TAVILY_API_KEY is not configured. Please set it in your .env file")
+        active_key = api_key or self.api_key
+        if not active_key:
+            raise ValueError("Tavily API key is not configured. Please provide one or set it in your .env file")
         
         logger.info(f"Mapping URL: {url} with instructions: {instructions}")
         
         payload = {
-            "api_key": self.api_key,
+            "api_key": active_key,
             "url": url,
             "instructions": instructions,
             "max_depth": max_depth,
@@ -253,7 +261,7 @@ class TavilyService:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 headers = {
                     "Content-Type": "application/json",
-                    "Authorization": f"Bearer {self.api_key}"
+                    "Authorization": f"Bearer {active_key}"
                 }
                 response = await client.post(
                     f"{self.base_url}/map",
@@ -300,7 +308,8 @@ class TavilyService:
         queries: list[str],
         search_depth: Optional[str] = None,
         max_results: Optional[int] = None,
-        include_answer: bool = True
+        include_answer: bool = True,
+        api_key: Optional[str] = None
     ) -> Dict[str, Any]:
 
         results = []
@@ -311,7 +320,7 @@ class TavilyService:
         for i, query in enumerate(queries, 1):
             try:
                 logger.info(f"[{i}/{len(queries)}] Processing: '{query}'")
-                result = await self.search(query, search_depth, max_results, include_answer)
+                result = await self.search(query, search_depth, max_results, include_answer, api_key)
                 results.append(result)
                 
             except Exception as e:

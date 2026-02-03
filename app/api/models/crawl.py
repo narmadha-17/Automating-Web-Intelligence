@@ -17,6 +17,7 @@ class CrawlRequest(BaseModel):
     format: Literal["markdown", "text"] = Field("markdown", description="The format of the extracted web page content.")
     include_favicon: bool = Field(False, description="Whether to include the favicon URL for each result.")
     timeout: Optional[int] = Field(60, ge=10, le=150, description="Maximum time in seconds to wait for the crawl operation.")
+    api_key: Optional[str] = Field(None, description="Optional Tavily API key to use for this request")
 
 class CrawlResultItem(BaseModel):
     url: str = Field(..., description="URL of the extracted content")

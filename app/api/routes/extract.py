@@ -34,7 +34,8 @@ async def extract(request: ExtractRequest) -> ExtractResponse:
             query=request.query,
             extract_depth=request.extract_depth,
             include_images=request.include_images,
-            include_answer=request.include_answer
+            include_answer=request.include_answer,
+            api_key=request.api_key
         )
         
         results = extract_data.get("results", [])

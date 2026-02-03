@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8000';
 
-const Crawl = () => {
+const Crawl = ({ apiKey }) => {
     const [url, setUrl] = useState('');
     const [instructions, setInstructions] = useState('');
     const [loading, setLoading] = useState(false);
@@ -20,7 +20,8 @@ const Crawl = () => {
                 instructions: instructions.trim() || undefined,
                 max_depth: 1,
                 max_breadth: 10,
-                limit: 5
+                limit: 5,
+                api_key: apiKey
             });
             setResults(response.data);
         } catch (err) {

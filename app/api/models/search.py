@@ -25,6 +25,10 @@ class SearchRequest(BaseModel):
         default=True,
         description="Whether to include AI-generated answer"
     )
+    api_key: Optional[str] = Field(
+        None,
+        description="Optional Tavily API key to use for this request"
+    )
     
     @field_validator('queries')
     @classmethod

@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8000';
 
-const Extract = () => {
+const Extract = ({ apiKey }) => {
     const [urls, setUrls] = useState(['']);
     const [query, setQuery] = useState('');
     const [loading, setLoading] = useState(false);
@@ -28,7 +28,8 @@ const Extract = () => {
                 query: query.trim() || undefined,
                 extract_depth: 'advanced',
                 include_images: false,
-                include_answer: true
+                include_answer: true,
+                api_key: apiKey
             });
             setResults(response.data);
         } catch (err) {

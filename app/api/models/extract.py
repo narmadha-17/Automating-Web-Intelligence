@@ -26,6 +26,10 @@ class ExtractRequest(BaseModel):
         default=False,
         description="Whether to include an AI-generated answer based on the extracted content"
     )
+    api_key: Optional[str] = Field(
+        None,
+        description="Optional Tavily API key to use for this request"
+    )
 
     @field_validator('urls')
     @classmethod
