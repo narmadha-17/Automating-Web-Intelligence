@@ -39,6 +39,9 @@ async def extract(request: ExtractRequest) -> ExtractResponse:
         
         results = extract_data.get("results", [])
         failed_results = extract_data.get("failed_results", [])
+        
+        logger.info(f"Extraction successful for {len(results)} URLs, failed for {len(failed_results)} URLs")
+        
         if results:
             try:
                 storage_results = []
