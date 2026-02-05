@@ -3,9 +3,10 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8000';
 
-const Search = ({ apiKey }) => {
+const Search = ({ apiKey, activeTab }) => {
     const [queries, setQueries] = useState(['']);
     const [loading, setLoading] = useState(false);
+    const [beautifyLoading, setBeautifyLoading] = useState(false);
     const [results, setResults] = useState(null);
     const [error, setError] = useState(null);
 
@@ -16,6 +17,31 @@ const Search = ({ apiKey }) => {
     };
 
     const addQuery = () => setQueries([...queries, '']);
+
+    const handleBeautify = async () => {
+        setBeautifyLoading(true);
+        setError(null);
+        try {
+            const response = await axios.post(`${API_BASE_URL}/beautify/correct`, {
+                queries: queries.filter(q => q.trim() !== '')
+            });
+            const corrected = response.data.corrected_queries;
+
+            // Map corrected queries back to the list, keeping empty ones as is
+            let correctedIdx = 0;
+            const newQueries = queries.map(q => {
+                if (q.trim() === '') return q;
+                return corrected[correctedIdx++];
+            });
+
+            setQueries(newQueries);
+        } catch (err) {
+            console.error('Beautify error:', err);
+            setError('Failed to beautify text');
+        } finally {
+            setBeautifyLoading(false);
+        }
+    };
 
     const handleSearch = async (e) => {
         e.preventDefault();
@@ -57,6 +83,9 @@ const Search = ({ apiKey }) => {
                 <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
                     <button type="button" onClick={addQuery} className="btn-primary" style={{ background: 'var(--bg-dark)', border: '1px solid var(--border-glass)' }}>
                         + Add Query
+                    </button>
+                    <button type="button" onClick={handleBeautify} disabled={beautifyLoading} className="btn-primary" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)' }}>
+                        {beautifyLoading ? 'Beautifying...' : '✨ Beautify Text'}
                     </button>
                     <button type="submit" disabled={loading} className="btn-primary">
                         {loading ? 'Searching...' : 'Perform Search'}

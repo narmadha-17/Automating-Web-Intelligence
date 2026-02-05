@@ -14,7 +14,7 @@ function App() {
   }, [apiKey]);
 
   const renderContent = () => {
-    const props = { apiKey };
+    const props = { apiKey, activeTab };
     switch (activeTab) {
       case 'search': return <Search {...props} />;
       case 'extract': return <Extract {...props} />;
