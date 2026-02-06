@@ -26,12 +26,12 @@ const Navbar = ({ activeTab, setActiveTab }) => {
                         style={{
                             background: 'none',
                             border: 'none',
-                            color: activeTab === tab.id ? 'var(--accent-blue)' : 'var(--text-muted)',
+                            color: activeTab === tab.id ? 'var(--primary-color)' : 'var(--text-muted)',
                             fontWeight: 600,
                             cursor: 'pointer',
                             fontSize: '1rem',
                             transition: 'color 0.2s',
-                            borderBottom: activeTab === tab.id ? '2px solid var(--accent-blue)' : '2px solid transparent'
+                            borderBottom: activeTab === tab.id ? '2px solid var(--primary-color)' : '2px solid transparent'
                         }}
                     >
                         {tab.label}

@@ -267,7 +267,7 @@ const Search = ({ apiKey, activeTab }) => {
                                     }}
                                 >
                                     <h5 style={{
-                                        color: 'var(--accent-blue)',
+                                        color: 'var(--accent-brown)',
                                         fontSize: '1.1rem',
                                         display: 'flex',
                                         alignItems: 'center',
@@ -278,18 +278,18 @@ const Search = ({ apiKey, activeTab }) => {
                                     </h5>
                                     {result.answer && (
                                         <div style={{
-                                            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1))',
+                                            background: 'linear-gradient(135deg, rgba(139, 111, 71, 0.1), rgba(210, 180, 140, 0.1))',
                                             padding: '1rem',
                                             borderRadius: '0.75rem',
                                             margin: '1rem 0',
-                                            border: '1px solid rgba(99, 102, 241, 0.2)'
+                                            border: '1px solid rgba(139, 111, 71, 0.2)'
                                         }}>
                                             <div style={{
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 gap: '0.5rem',
                                                 marginBottom: '0.5rem',
-                                                color: 'var(--accent-purple)'
+                                                color: 'var(--accent-tan)'
                                             }}>
                                                 <span>🤖</span>
                                                 <strong>AI Answer</strong>

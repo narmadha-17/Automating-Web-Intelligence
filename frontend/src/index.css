@@ -1,13 +1,13 @@
 :root {
-  --primary-color: #6366f1;
-  --primary-hover: #4f46e5;
-  --bg-dark: #0f172a;
-  --bg-card: rgba(30, 41, 59, 0.7);
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border-glass: rgba(255, 255, 255, 0.1);
-  --accent-blue: #38bdf8;
-  --accent-purple: #a855f7;
+  --primary-color: #8B6F47;
+  --primary-hover: #6B5744;
+  --bg-dark: #1A1614;
+  --bg-card: rgba(44, 34, 30, 0.75);
+  --text-main: #FDF5E6;
+  --text-muted: #BCA48B;
+  --border-glass: rgba(210, 180, 140, 0.15);
+  --accent-brown: #C19A6B;
+  --accent-tan: #D2B48C;
 }
 
 * {
@@ -299,4 +299,308 @@ h3 {
 .query-input-wrapper .input-glass {
   margin-bottom: 0;
   flex: 1;
+}
+
+/* ===== Creative Animated Background for Search ===== */
+.search-container {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Mesh Gradient Background */
+.search-bg-mesh {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(139, 111, 71, 0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 0%, rgba(160, 130, 109, 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 100%, rgba(210, 180, 140, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 0% 100%, rgba(107, 87, 68, 0.2) 0%, transparent 50%);
+  animation: meshMove 20s ease-in-out infinite;
+  z-index: -3;
+  pointer-events: none;
+}
+
+@keyframes meshMove {
+
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+
+  25% {
+    transform: scale(1.05) rotate(1deg);
+  }
+
+  50% {
+    transform: scale(1.1) rotate(-1deg);
+  }
+
+  75% {
+    transform: scale(1.05) rotate(0.5deg);
+  }
+}
+
+/* Aurora Effect */
+.search-bg-aurora {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg,
+      transparent 0%,
+      rgba(139, 111, 71, 0.08) 20%,
+      transparent 40%,
+      rgba(210, 180, 140, 0.08) 60%,
+      transparent 80%,
+      rgba(160, 130, 109, 0.08) 100%);
+  background-size: 300% 300%;
+  animation: auroraFlow 12s ease-in-out infinite;
+  z-index: -2;
+  pointer-events: none;
+}
+
+@keyframes auroraFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Glowing Orbs */
+.search-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.6;
+  animation: orbFloat 15s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -2;
+}
+
+.search-orb-1 {
+  width: 180px;
+  height: 180px;
+  background: linear-gradient(135deg, #8B6F47, #A0826D);
+  top: -40px;
+  right: -40px;
+  animation-delay: 0s;
+}
+
+.search-orb-2 {
+  width: 140px;
+  height: 140px;
+  background: linear-gradient(135deg, #A0826D, #D2B48C);
+  bottom: -30px;
+  left: -30px;
+  animation-delay: -5s;
+}
+
+.search-orb-3 {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #D2B48C, #8B6F47);
+  top: 50%;
+  left: 50%;
+  animation-delay: -10s;
+}
+
+@keyframes orbFloat {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.6;
+  }
+
+  25% {
+    transform: translate(20px, -20px) scale(1.15);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: translate(-15px, 15px) scale(0.9);
+    opacity: 0.5;
+  }
+
+  75% {
+    transform: translate(10px, 10px) scale(1.1);
+    opacity: 0.65;
+  }
+}
+
+/* Floating Particles */
+.search-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.search-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(135deg, rgba(139, 111, 71, 0.8), rgba(210, 180, 140, 0.8));
+  border-radius: 50%;
+  animation: particleRise 10s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(139, 111, 71, 0.5);
+}
+
+.search-particle:nth-child(1) {
+  left: 10%;
+  animation-delay: 0s;
+  animation-duration: 12s;
+}
+
+.search-particle:nth-child(2) {
+  left: 25%;
+  animation-delay: -2s;
+  animation-duration: 14s;
+  width: 4px;
+  height: 4px;
+}
+
+.search-particle:nth-child(3) {
+  left: 40%;
+  animation-delay: -4s;
+  animation-duration: 11s;
+  width: 8px;
+  height: 8px;
+}
+
+.search-particle:nth-child(4) {
+  left: 55%;
+  animation-delay: -6s;
+  animation-duration: 13s;
+}
+
+.search-particle:nth-child(5) {
+  left: 70%;
+  animation-delay: -3s;
+  animation-duration: 15s;
+  width: 5px;
+  height: 5px;
+}
+
+.search-particle:nth-child(6) {
+  left: 85%;
+  animation-delay: -8s;
+  animation-duration: 12s;
+  width: 7px;
+  height: 7px;
+}
+
+@keyframes particleRise {
+  0% {
+    transform: translateY(100%) rotate(0deg);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-100%) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Grid Pattern Overlay */
+.search-bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: gridPulse 8s ease-in-out infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes gridPulse {
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Noise Texture Overlay */
+.search-bg-noise {
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Glowing Border Animation */
+.search-container::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 1.1rem;
+  background: linear-gradient(135deg,
+      #8B6F47,
+      #A0826D,
+      #D2B48C,
+      #6B5744,
+      #8B6F47);
+  background-size: 300% 300%;
+  animation: borderGlow 6s linear infinite;
+  z-index: -4;
+  opacity: 0.4;
+}
+
+@keyframes borderGlow {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Enhanced Glass Card for Search */
+.search-container .glass-card {
+  background: rgba(44, 34, 30, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Bear Animation */
+@keyframes coverEyes {
+  0% {
+    transform: scale(0.5) translateY(-20px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
 }

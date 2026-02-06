@@ -68,7 +68,7 @@ const Crawl = ({ apiKey }) => {
                     <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {results.results && results.results.map((res, idx) => (
                             <div key={idx} className="glass-card" style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)' }}>
-                                <a href={res.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-blue)', textDecoration: 'none', display: 'block', marginBottom: '0.5rem' }}>
+                                <a href={res.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-brown)', textDecoration: 'none', display: 'block', marginBottom: '0.5rem' }}>
                                     {res.url}
                                 </a>
                                 <p style={{ fontSize: '0.9rem' }}>

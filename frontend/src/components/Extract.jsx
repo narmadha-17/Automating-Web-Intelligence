@@ -89,8 +89,8 @@ const Extract = ({ apiKey }) => {
             {results && (
                 <div style={{ marginTop: '2rem' }}>
                     {results.answer && (
-                        <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '1.5rem', borderRadius: '1rem', marginBottom: '2rem', border: '1px solid var(--accent-blue)' }}>
-                            <h4 style={{ color: 'var(--accent-blue)', marginBottom: '0.5rem' }}>AI Summary</h4>
+                        <div style={{ background: 'rgba(139, 111, 71, 0.1)', padding: '1.5rem', borderRadius: '1rem', marginBottom: '2rem', border: '1px solid var(--accent-brown)' }}>
+                            <h4 style={{ color: 'var(--accent-brown)', marginBottom: '0.5rem' }}>AI Summary</h4>
                             <p>{results.answer}</p>
                         </div>
                     )}
@@ -103,7 +103,7 @@ const Extract = ({ apiKey }) => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                         {results.results.map((result, idx) => (
                             <div key={idx} className="glass-card" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)' }}>
-                                <h5 style={{ color: 'var(--accent-purple)', marginBottom: '0.5rem' }}>{result.url}</h5>
+                                <h5 style={{ color: 'var(--accent-tan)', marginBottom: '0.5rem' }}>{result.url}</h5>
                                 <div style={{ fontSize: '0.9rem', whiteSpace: 'pre-wrap' }}>
                                     {result.content || result.raw_content ?
                                         (result.content || result.raw_content).substring(0, 1000) + '...' :
