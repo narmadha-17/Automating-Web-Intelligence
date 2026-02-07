@@ -27,10 +27,9 @@ const Search = ({ apiKey, activeTab }) => {
         }
     };
 
-    const handleBeautify = async () => {
-        const nonEmptyQueries = queries.filter(q => q.trim() !== '');
-        if (nonEmptyQueries.length === 0) {
-            setError('Please enter at least one query to beautify');
+    const handleBeautify = async (index) => {
+        const queryToCorrect = queries[index];
+        if (!queryToCorrect || !queryToCorrect.trim()) {
             return;
         }
 
@@ -38,25 +37,19 @@ const Search = ({ apiKey, activeTab }) => {
         setError(null);
         try {
             const response = await axios.post(`${API_BASE_URL}/beautify/correct`, {
-                queries: nonEmptyQueries
+                queries: [queryToCorrect]
             });
-            const corrected = response.data.corrected_queries;
+            const corrected = response.data.corrected_queries[0];
 
-            let correctedIdx = 0;
-            const changedIndexes = [];
-            const newQueries = queries.map((q, idx) => {
-                if (q.trim() === '') return q;
-                const newValue = corrected[correctedIdx++];
-                if (newValue !== q) {
-                    changedIndexes.push(idx);
+            if (corrected !== queryToCorrect) {
+                const newQueries = [...queries];
+                newQueries[index] = corrected;
+                setQueries(newQueries);
+
+                if (!beautifiedIndexes.includes(index)) {
+                    setBeautifiedIndexes(prev => [...prev, index]);
                 }
-                return newValue;
-            });
 
-            setQueries(newQueries);
-            setBeautifiedIndexes(changedIndexes);
-
-            if (changedIndexes.length > 0) {
                 setShowSuccess(true);
                 setTimeout(() => setShowSuccess(false), 3000);
             }
@@ -125,9 +118,20 @@ const Search = ({ apiKey, activeTab }) => {
                                 onChange={(e) => handleQueryChange(index, e.target.value)}
                                 style={{
                                     borderColor: beautifiedIndexes.includes(index) ? '#10B981' : undefined,
-                                    boxShadow: beautifiedIndexes.includes(index) ? '0 0 10px rgba(16, 185, 129, 0.2)' : undefined
+                                    boxShadow: beautifiedIndexes.includes(index) ? '0 0 10px rgba(16, 185, 129, 0.2)' : undefined,
+                                    flex: 1
                                 }}
                             />
+                            <button
+                                type="button"
+                                onClick={() => handleBeautify(index)}
+                                disabled={beautifyLoading || !query.trim()}
+                                className="btn btn-magic"
+                                style={{ padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                title="Beautify Query"
+                            >
+                                {beautifyLoading ? '✨' : '✨'}
+                            </button>
                             {queries.length > 1 && (
                                 <button
                                     type="button"
@@ -145,15 +149,6 @@ const Search = ({ apiKey, activeTab }) => {
                     <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1.5rem' }}>
                         <button type="button" onClick={addQuery} className="btn btn-ghost" style={{ border: '1px solid var(--border-glass)' }}>
                             + Add Query
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={handleBeautify}
-                            disabled={beautifyLoading}
-                            className="btn btn-magic"
-                        >
-                            {beautifyLoading ? '✨ Beautifying...' : '✨ Beautify Text'}
                         </button>
 
                         <button

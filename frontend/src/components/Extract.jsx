@@ -99,12 +99,25 @@ const Extract = ({ apiKey }) => {
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
                             Specific Question (Optional)
                         </label>
-                        <input
-                            className="glass-input"
-                            placeholder="e.g. 'What is the pricing?'"
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                        />
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <input
+                                className="glass-input"
+                                placeholder="e.g. 'What is the pricing?'"
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                style={{ flex: 1 }}
+                            />
+                            <button
+                                type="button"
+                                onClick={handleBeautify}
+                                disabled={beautifyLoading || !query.trim()}
+                                className="btn btn-magic"
+                                style={{ padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                title="Beautify Question"
+                            >
+                                {beautifyLoading ? '✨' : '✨'}
+                            </button>
+                        </div>
                     </div>
 
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
@@ -124,15 +137,6 @@ const Extract = ({ apiKey }) => {
                     <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
                         <button type="button" onClick={addUrl} className="btn btn-ghost" style={{ border: '1px solid var(--border-glass)' }}>
                             + Add URL
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={handleBeautify}
-                            disabled={beautifyLoading || !query.trim()}
-                            className="btn btn-magic"
-                        >
-                            {beautifyLoading ? '✨ Beautifying...' : '✨ Beautify Question'}
                         </button>
 
                         <button type="submit" disabled={loading} className="btn btn-primary" style={{ marginLeft: 'auto' }}>

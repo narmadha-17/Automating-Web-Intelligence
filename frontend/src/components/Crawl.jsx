@@ -104,31 +104,31 @@ const Crawl = ({ apiKey }) => {
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
                             Crawl Instructions
                         </label>
-                        <textarea
-                            className="glass-input"
-                            placeholder="e.g. 'Look for contact information and pricing'"
-                            value={instructions}
-                            onChange={(e) => setInstructions(e.target.value)}
-                            rows={3}
-                            style={{ resize: 'vertical' }}
-                        />
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                            <textarea
+                                className="glass-input"
+                                placeholder="e.g. 'Look for contact information and pricing'"
+                                value={instructions}
+                                onChange={(e) => setInstructions(e.target.value)}
+                                rows={3}
+                                style={{ resize: 'vertical', flex: 1 }}
+                            />
+                            <button
+                                type="button"
+                                onClick={handleBeautify}
+                                disabled={beautifyLoading || !instructions.trim()}
+                                className="btn btn-magic"
+                                style={{ padding: '0 1rem', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                title="Beautify Instructions"
+                            >
+                                {beautifyLoading ? '✨' : '✨'}
+                            </button>
+                        </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                        <button
-                            type="button"
-                            onClick={handleBeautify}
-                            disabled={beautifyLoading || !instructions.trim()}
-                            className="btn btn-magic"
-                            style={{ flex: 1 }}
-                        >
-                            {beautifyLoading ? '✨ Beautifying...' : '✨ Beautify Instructions'}
-                        </button>
-
-                        <button type="submit" disabled={loading} className="btn btn-primary" style={{ flex: 1 }}>
-                            {loading ? 'Crawling...' : 'Start Crawl'}
-                        </button>
-                    </div>
+                    <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem' }}>
+                        {loading ? 'Crawling...' : 'Start Crawl'}
+                    </button>
                 </form>
 
                 {error && <div style={{ color: '#EF4444', marginTop: '1rem', padding: '0.5rem', background: 'rgba(239,68,68,0.1)', borderRadius: 'var(--radius-sm)' }}>⚠️ {error}</div>}
