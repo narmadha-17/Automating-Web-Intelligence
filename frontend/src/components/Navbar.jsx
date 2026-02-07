@@ -9,29 +9,26 @@ const Navbar = ({ activeTab, setActiveTab }) => {
     ];
 
     return (
-        <nav className="glass-card" style={{
-            margin: '1rem',
-            padding: '0.75rem 2rem',
+        <nav className="glass-panel" style={{
+            padding: '1rem 2rem',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            zIndex: 100
+            marginBottom: '2rem'
         }}>
-            <h2 className="gradient-text" style={{ fontSize: '1.5rem', margin: 0 }}>Web Intel</h2>
-            <div style={{ display: 'flex', gap: '1.5rem' }}>
+            <h2 className="text-gradient" style={{ fontSize: '1.5rem', margin: 0, fontWeight: 700 }}>
+                Web Intel
+            </h2>
+            <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(0,0,0,0.2)', padding: '0.25rem', borderRadius: 'var(--radius-full)' }}>
                 {tabs.map(tab => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
+                        className={activeTab === tab.id ? 'btn btn-primary' : 'btn btn-ghost'}
                         style={{
-                            background: 'none',
-                            border: 'none',
-                            color: activeTab === tab.id ? 'var(--primary-color)' : 'var(--text-muted)',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            fontSize: '1rem',
-                            transition: 'color 0.2s',
-                            borderBottom: activeTab === tab.id ? '2px solid var(--primary-color)' : '2px solid transparent'
+                            borderRadius: 'calc(var(--radius-full) - 2px)',
+                            padding: '0.5rem 1.25rem',
+                            fontSize: '0.9rem'
                         }}
                     >
                         {tab.label}

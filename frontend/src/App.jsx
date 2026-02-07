@@ -29,133 +29,72 @@ function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: '4rem' }}>
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className="app-layout">
+      <div className="bg-orb orb-1" />
+      <div className="bg-orb orb-2" />
 
-      <main style={{ padding: '0 1rem' }} className="animate-fade-in">
-        <div className="search-container" style={{ maxWidth: '800px', margin: '2rem auto', position: 'relative' }}>
-          <div className="search-bg-mesh"></div>
-          <div className="search-bg-aurora"></div>
+      <header className="app-header">
+        <div className="container">
+          <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+        </div>
+      </header>
 
-          <div className="search-orb search-orb-1"></div>
-          <div className="search-orb search-orb-2"></div>
-          <div className="search-orb search-orb-3"></div>
+      <main className="app-main container animate-slide-up">
 
-          <div className="search-particles">
-            <div className="search-particle"></div>
-            <div className="search-particle"></div>
-            <div className="search-particle"></div>
-            <div className="search-particle"></div>
-            <div className="search-particle"></div>
-            <div className="search-particle"></div>
+        {/* Bear API Widget */}
+        <div className="api-key-widget glass-panel">
+          <div className="bear-avatar">
+            <img
+              src={isPasswordFocused ? bearClosed : bearOpen}
+              alt="Bear Assistant"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
           </div>
 
-          <div className="search-bg-grid"></div>
-          <div className="search-bg-noise"></div>
+          <h2 className="text-gradient" style={{ marginBottom: '1rem', fontSize: '1.5rem' }}>
+            Web Intelligence
+          </h2>
 
-          <div className="glass-card animate-scale-in hover-glow" style={{ textAlign: 'center' }}>
-            <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }} className="gradient-text">
-              Web Intelligence Dashboard
-            </h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', marginBottom: '3rem' }}>
-              AI-powered gathering and extraction from the web.
-            </p>
-
-            <div style={{
-              maxWidth: '500px',
-              margin: '2rem auto 0 auto',
-              padding: '1.5rem',
-              background: 'rgba(255,255,255,0.03)',
-              borderRadius: '1rem',
-              border: '1px solid var(--border-glass)',
-              position: 'relative'
-            }}>
-              {/* Cute Bear Character */}
-              <div style={{
+          <div style={{ position: 'relative' }}>
+            <input
+              type={showApiKey ? "text" : "password"}
+              className="glass-input"
+              placeholder="Enter Tavily API Key..."
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              onFocus={() => setIsPasswordFocused(true)}
+              onBlur={() => setIsPasswordFocused(false)}
+              style={{ paddingRight: '3rem', textAlign: 'center' }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowApiKey(!showApiKey)}
+              className="btn-ghost"
+              style={{
                 position: 'absolute',
-                top: '-120px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                zIndex: 10,
-                width: '120px',
-                height: '120px',
-                borderRadius: '50%',
-                overflow: 'hidden',
-                background: '#FDF5E6',
-                boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
-                border: '4px solid rgba(255,255,255,0.1)'
-              }}>
-                <img
-                  src={isPasswordFocused ? bearClosed : bearOpen}
-                  alt="Bear"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover'
-                  }}
-                />
-              </div>
-
-              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem', marginTop: '1rem' }}>
-                Tavily API Key (saved locally)
-              </label>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <input
-                  type={showApiKey ? "text" : "password"}
-                  className="input-glass"
-                  placeholder="Enter tvly-..."
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  onFocus={() => setIsPasswordFocused(true)}
-                  onBlur={() => setIsPasswordFocused(false)}
-                  style={{ marginBottom: 0, textAlign: 'center', paddingRight: '3rem' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowApiKey(!showApiKey)}
-                  style={{
-                    position: 'absolute',
-                    right: '0.75rem',
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: '0.5rem',
-                    fontSize: '1.2rem',
-                    color: 'var(--text-muted)',
-                    transition: 'color 0.2s ease, transform 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = 'var(--primary-color)';
-                    e.currentTarget.style.transform = 'scale(1.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = 'var(--text-muted)';
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }}
-                  title={showApiKey ? "Hide API Key" : "Show API Key"}
-                >
-                  {showApiKey ? '👁️' : '👁️‍🗨️'}
-                </button>
-              </div>
-            </div>
+                right: '5px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                padding: '0.4rem',
+              }}
+              title={showApiKey ? "Hide Key" : "Show Key"}
+            >
+              {showApiKey ? '👁️' : '👁️‍🗨️'}
+            </button>
           </div>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+            Your key is saved locally
+          </p>
         </div>
 
-        {renderContent()}
+        {/* Content Area */}
+        <div className="search-wrapper">
+          {renderContent()}
+        </div>
       </main>
 
-      <footer style={{
-        textAlign: 'center',
-        padding: '2rem',
-        color: 'var(--text-muted)',
-        fontSize: '0.9rem',
-        marginTop: 'auto'
-      }}>
-        Built with Passion - Narmadha Ganesan
+      <footer style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+        Built with Passion & AI - Narmadha Ganesan
       </footer>
     </div>
   );

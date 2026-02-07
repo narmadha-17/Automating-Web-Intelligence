@@ -7,6 +7,8 @@ const Extract = ({ apiKey }) => {
     const [urls, setUrls] = useState(['']);
     const [query, setQuery] = useState('');
     const [loading, setLoading] = useState(false);
+    const [beautifyLoading, setBeautifyLoading] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
     const [results, setResults] = useState(null);
     const [error, setError] = useState(null);
 
@@ -17,6 +19,33 @@ const Extract = ({ apiKey }) => {
     };
 
     const addUrl = () => setUrls([...urls, '']);
+
+    const handleBeautify = async () => {
+        if (!query.trim()) {
+            setError('Please enter a question to beautify');
+            return;
+        }
+
+        setBeautifyLoading(true);
+        setError(null);
+        try {
+            const response = await axios.post(`${API_BASE_URL}/beautify/correct`, {
+                queries: [query]
+            });
+            const corrected = response.data.corrected_queries[0];
+
+            if (corrected !== query) {
+                setQuery(corrected);
+                setShowSuccess(true);
+                setTimeout(() => setShowSuccess(false), 3000);
+            }
+        } catch (err) {
+            console.error('Beautify error:', err);
+            setError('Failed to beautify text. Please try again.');
+        } finally {
+            setBeautifyLoading(false);
+        }
+    };
 
     const handleExtract = async (e) => {
         e.preventDefault();
@@ -45,69 +74,121 @@ const Extract = ({ apiKey }) => {
     };
 
     return (
-        <div className="glass-card animate-scale-in hover-glow" style={{ maxWidth: '800px', margin: '2rem auto' }}>
-            <h3 style={{ marginBottom: '1.5rem' }}>Content Extraction</h3>
-            <form onSubmit={handleExtract}>
-                <input
-                    className="input-glass"
-                    placeholder="Extraction Query (optional, e.g. 'What is the pricing?')"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                />
-                {urls.map((url, index) => (
-                    <input
-                        key={index}
-                        className="input-glass"
-                        placeholder="Enter URL to extract..."
-                        value={url}
-                        onChange={(e) => handleUrlChange(index, e.target.value)}
-                    />
-                ))}
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-                    <button type="button" onClick={addUrl} className="btn-primary" style={{ background: 'var(--bg-dark)', border: '1px solid var(--border-glass)' }}>
-                        + Add URL
-                    </button>
-                    <button type="submit" disabled={loading} className="btn-primary">
-                        {loading ? 'Extracting...' : 'Extract Content'}
-                    </button>
-                </div>
-            </form>
+        <div className="animate-slide-up">
+            <div className="glass-panel" style={{ padding: '2rem' }}>
+                {showSuccess && (
+                    <div style={{
+                        position: 'fixed',
+                        top: '20px',
+                        right: '20px',
+                        background: '#10B981',
+                        color: 'white',
+                        padding: '1rem',
+                        borderRadius: '8px',
+                        zIndex: 100,
+                        animation: 'slide-up 0.3s ease-out'
+                    }}>
+                        ✨ Text beautified successfully!
+                    </div>
+                )}
 
-            {error && (
-                <div style={{
-                    color: '#ef4444',
-                    marginBottom: '1rem',
-                    padding: '1rem',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    borderRadius: '0.5rem',
-                    border: '1px solid rgba(239, 68, 68, 0.2)'
-                }}>
-                    <strong>Error:</strong> {error}
-                </div>
-            )}
+                <h3 className="text-gradient" style={{ marginBottom: '1.5rem', fontSize: '1.25rem' }}>Content Extraction</h3>
+
+                <form onSubmit={handleExtract}>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                            Specific Question (Optional)
+                        </label>
+                        <input
+                            className="glass-input"
+                            placeholder="e.g. 'What is the pricing?'"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                        />
+                    </div>
+
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                        Target URLs
+                    </label>
+                    {urls.map((url, index) => (
+                        <div key={index} style={{ marginBottom: '0.75rem' }}>
+                            <input
+                                className="glass-input"
+                                placeholder="https://example.com"
+                                value={url}
+                                onChange={(e) => handleUrlChange(index, e.target.value)}
+                            />
+                        </div>
+                    ))}
+
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+                        <button type="button" onClick={addUrl} className="btn btn-ghost" style={{ border: '1px solid var(--border-glass)' }}>
+                            + Add URL
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={handleBeautify}
+                            disabled={beautifyLoading || !query.trim()}
+                            className="btn btn-magic"
+                        >
+                            {beautifyLoading ? '✨ Beautifying...' : '✨ Beautify Question'}
+                        </button>
+
+                        <button type="submit" disabled={loading} className="btn btn-primary" style={{ marginLeft: 'auto' }}>
+                            {loading ? 'Extracting...' : 'Extract Content'}
+                        </button>
+                    </div>
+                </form>
+
+                {error && (
+                    <div style={{
+                        marginTop: '1rem',
+                        padding: '1rem',
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '8px',
+                        color: '#EF4444'
+                    }}>
+                        ⚠️ {error}
+                    </div>
+                )}
+            </div>
 
             {results && (
                 <div style={{ marginTop: '2rem' }}>
                     {results.answer && (
-                        <div style={{ background: 'rgba(139, 111, 71, 0.1)', padding: '1.5rem', borderRadius: '1rem', marginBottom: '2rem', border: '1px solid var(--accent-brown)' }}>
-                            <h4 style={{ color: 'var(--accent-brown)', marginBottom: '0.5rem' }}>AI Summary</h4>
-                            <p>{results.answer}</p>
+                        <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '2rem', borderLeft: '4px solid var(--color-primary)' }}>
+                            <h4 style={{ color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1.1rem' }}>AI Summary</h4>
+                            <p style={{ lineHeight: '1.6' }}>{results.answer}</p>
                         </div>
                     )}
 
-                    <h4 className="gradient-text">Extracted Data</h4>
-                    <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-                        Total: {results.summary.total} | Successful: {results.summary.successful}
-                    </p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h4 className="text-gradient">Extracted Data</h4>
+                        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                            Success: <span style={{ color: '#10B981' }}>{results.summary.successful}</span>
+                        </p>
+                    </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {results.results.map((result, idx) => (
-                            <div key={idx} className="glass-card" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)' }}>
-                                <h5 style={{ color: 'var(--accent-tan)', marginBottom: '0.5rem' }}>{result.url}</h5>
-                                <div style={{ fontSize: '0.9rem', whiteSpace: 'pre-wrap' }}>
-                                    {result.content || result.raw_content ?
-                                        (result.content || result.raw_content).substring(0, 1000) + '...' :
-                                        'No content extracted'}
+                            <div key={idx} className="result-card animate-slide-up" style={{ animationDelay: `${idx * 0.1}s` }}>
+                                <h5 style={{ color: 'var(--color-primary)', marginBottom: '0.75rem', wordBreak: 'break-all' }}>
+                                    {result.url}
+                                </h5>
+                                <div style={{
+                                    background: 'rgba(0,0,0,0.2)',
+                                    padding: '1rem',
+                                    borderRadius: '8px',
+                                    fontSize: '0.9rem',
+                                    fontFamily: 'var(--font-mono)',
+                                    maxHeight: '300px',
+                                    overflowY: 'auto',
+                                    whiteSpace: 'pre-wrap',
+                                    color: 'var(--text-muted)'
+                                }}>
+                                    {result.content || result.raw_content || 'No content found'}
                                 </div>
                             </div>
                         ))}

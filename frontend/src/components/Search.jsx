@@ -42,7 +42,6 @@ const Search = ({ apiKey, activeTab }) => {
             });
             const corrected = response.data.corrected_queries;
 
-            // Map corrected queries back to the list, keeping empty ones as is
             let correctedIdx = 0;
             const changedIndexes = [];
             const newQueries = queries.map((q, idx) => {
@@ -57,7 +56,6 @@ const Search = ({ apiKey, activeTab }) => {
             setQueries(newQueries);
             setBeautifiedIndexes(changedIndexes);
 
-            // Show success toast if any changes were made
             if (changedIndexes.length > 0) {
                 setShowSuccess(true);
                 setTimeout(() => setShowSuccess(false), 3000);
@@ -95,60 +93,48 @@ const Search = ({ apiKey, activeTab }) => {
     };
 
     return (
-        <div className="search-container" style={{ maxWidth: '800px', margin: '2rem auto', position: 'relative' }}>
-            <div className="search-bg-mesh"></div>
-            <div className="search-bg-aurora"></div>
-
-            <div className="search-orb search-orb-1"></div>
-            <div className="search-orb search-orb-2"></div>
-            <div className="search-orb search-orb-3"></div>
-
-            <div className="search-particles">
-                <div className="search-particle"></div>
-                <div className="search-particle"></div>
-                <div className="search-particle"></div>
-                <div className="search-particle"></div>
-                <div className="search-particle"></div>
-                <div className="search-particle"></div>
-            </div>
-
-            <div className="search-bg-grid"></div>
-
-            <div className="search-bg-noise"></div>
-
-            <div className="glass-card animate-scale-in hover-glow">
+        <div className="animate-slide-up">
+            <div className="glass-panel" style={{ padding: '2rem' }}>
                 {showSuccess && (
-                    <div className="success-toast">
-                        <span style={{ fontSize: '1.2rem' }}>✨</span>
-                        <span>Text beautified successfully!</span>
+                    <div style={{
+                        position: 'fixed',
+                        top: '20px',
+                        right: '20px',
+                        background: '#10B981',
+                        color: 'white',
+                        padding: '1rem',
+                        borderRadius: '8px',
+                        zIndex: 100,
+                        animation: 'slide-up 0.3s ease-out'
+                    }}>
+                        ✨ Text beautified successfully!
                     </div>
                 )}
 
-                <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span className="gradient-text">AI Powered Search</span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>
-                        with spell correction
-                    </span>
+                <h3 className="text-gradient" style={{ marginBottom: '1.5rem', fontSize: '1.25rem' }}>
+                    Multi-Query Search
                 </h3>
 
                 <form onSubmit={handleSearch}>
                     {queries.map((query, index) => (
-                        <div key={index} className="query-input-wrapper">
+                        <div key={index} style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem' }}>
                             <input
-                                className={`input-glass ${beautifiedIndexes.includes(index) ? 'input-beautified' : ''}`}
-                                placeholder="Enter search query... (tip: use Beautify to fix typos!)"
+                                className="glass-input"
+                                placeholder="Enter search query..."
                                 value={query}
                                 onChange={(e) => handleQueryChange(index, e.target.value)}
                                 style={{
-                                    transition: 'all 0.3s ease',
+                                    borderColor: beautifiedIndexes.includes(index) ? '#10B981' : undefined,
+                                    boxShadow: beautifiedIndexes.includes(index) ? '0 0 10px rgba(16, 185, 129, 0.2)' : undefined
                                 }}
                             />
                             {queries.length > 1 && (
                                 <button
                                     type="button"
                                     onClick={() => removeQuery(index)}
-                                    className="btn-remove"
-                                    title="Remove query"
+                                    className="btn-ghost"
+                                    style={{ color: '#EF4444' }}
+                                    title="Remove"
                                 >
                                     ✕
                                 </button>
@@ -156,195 +142,94 @@ const Search = ({ apiKey, activeTab }) => {
                         </div>
                     ))}
 
-                    <div className="button-container">
-                        <button
-                            type="button"
-                            onClick={addQuery}
-                            className="btn-primary"
-                            style={{
-                                background: 'var(--bg-dark)',
-                                border: '1px solid var(--border-glass)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                            }}
-                        >
-                            <span style={{ fontSize: '1.1rem' }}>+</span>
-                            Add Query
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1.5rem' }}>
+                        <button type="button" onClick={addQuery} className="btn btn-ghost" style={{ border: '1px solid var(--border-glass)' }}>
+                            + Add Query
                         </button>
 
                         <button
                             type="button"
                             onClick={handleBeautify}
                             disabled={beautifyLoading}
-                            className={`btn-beautify ${beautifyLoading ? 'loading' : ''}`}
+                            className="btn btn-magic"
                         >
-                            {beautifyLoading ? (
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <span style={{
-                                        display: 'inline-block',
-                                        animation: 'sparkle 0.5s ease-in-out infinite'
-                                    }}>✨</span>
-                                    Beautifying...
-                                </span>
-                            ) : (
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <span>✨</span>
-                                    Beautify Text
-                                </span>
-                            )}
+                            {beautifyLoading ? '✨ Beautifying...' : '✨ Beautify Text'}
                         </button>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="btn-primary"
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                            }}
+                            className="btn btn-primary"
+                            style={{ marginLeft: 'auto' }}
                         >
-                            {loading ? (
-                                <>
-                                    <span style={{
-                                        display: 'inline-block',
-                                        animation: 'pulse-glow 1s ease-in-out infinite'
-                                    }}>🔍</span>
-                                    Searching...
-                                </>
-                            ) : (
-                                <>
-                                    <span>🔍</span>
-                                    Perform Search
-                                </>
-                            )}
+                            {loading ? '🔍 Searching...' : '🔍 Perform Search'}
                         </button>
                     </div>
                 </form>
 
                 {error && (
                     <div style={{
-                        color: '#ef4444',
-                        marginBottom: '1rem',
-                        padding: '0.75rem 1rem',
+                        marginTop: '1rem',
+                        padding: '1rem',
                         background: 'rgba(239, 68, 68, 0.1)',
-                        borderRadius: '0.5rem',
                         border: '1px solid rgba(239, 68, 68, 0.3)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
+                        borderRadius: '8px',
+                        color: '#EF4444'
                     }}>
-                        <span>⚠️</span>
-                        {error}
-                    </div>
-                )}
-
-                {results && (
-                    <div style={{ marginTop: '2rem' }} className="animate-fade-in">
-                        <h4 className="gradient-text" style={{ marginBottom: '0.75rem' }}>Results Summary</h4>
-                        <p style={{
-                            color: 'var(--text-muted)',
-                            display: 'flex',
-                            gap: '1rem'
-                        }}>
-                            <span style={{ color: '#22c55e' }}>✓ Successful: {results.summary.successful}</span>
-                            <span style={{ color: results.summary.failed > 0 ? '#ef4444' : 'var(--text-muted)' }}>
-                                ✗ Failed: {results.summary.failed}
-                            </span>
-                        </p>
-
-                        <div style={{ marginTop: '1.5rem' }}>
-                            {results.results.map((result, idx) => (
-                                <div
-                                    key={idx}
-                                    className="animate-fade-in"
-                                    style={{
-                                        marginBottom: '2rem',
-                                        borderBottom: '1px solid var(--border-glass)',
-                                        paddingBottom: '1.5rem',
-                                        animationDelay: `${idx * 0.1}s`
-                                    }}
-                                >
-                                    <h5 style={{
-                                        color: 'var(--accent-brown)',
-                                        fontSize: '1.1rem',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem'
-                                    }}>
-                                        <span>🔎</span>
-                                        {result.query}
-                                    </h5>
-                                    {result.answer && (
-                                        <div style={{
-                                            background: 'linear-gradient(135deg, rgba(139, 111, 71, 0.1), rgba(210, 180, 140, 0.1))',
-                                            padding: '1rem',
-                                            borderRadius: '0.75rem',
-                                            margin: '1rem 0',
-                                            border: '1px solid rgba(139, 111, 71, 0.2)'
-                                        }}>
-                                            <div style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '0.5rem',
-                                                marginBottom: '0.5rem',
-                                                color: 'var(--accent-tan)'
-                                            }}>
-                                                <span>🤖</span>
-                                                <strong>AI Answer</strong>
-                                            </div>
-                                            <p style={{ color: 'var(--text-main)' }}>{result.answer}</p>
-                                        </div>
-                                    )}
-                                    {result.results.map((r, rIdx) => (
-                                        <div
-                                            key={rIdx}
-                                            style={{
-                                                margin: '0.75rem 0',
-                                                padding: '0.75rem',
-                                                borderRadius: '0.5rem',
-                                                transition: 'all 0.2s ease',
-                                                cursor: 'pointer'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.background = 'transparent';
-                                            }}
-                                        >
-                                            <a
-                                                href={r.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                style={{
-                                                    color: 'var(--primary-color)',
-                                                    textDecoration: 'none',
-                                                    fontWeight: '500',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '0.5rem'
-                                                }}
-                                            >
-                                                <span>🔗</span>
-                                                {r.title}
-                                            </a>
-                                            <p style={{
-                                                fontSize: '0.9rem',
-                                                color: 'var(--text-muted)',
-                                                marginTop: '0.25rem'
-                                            }}>
-                                                {r.content.substring(0, 200)}...
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            ))}
-                        </div>
+                        ⚠️ {error}
                     </div>
                 )}
             </div>
+
+            {results && (
+                <div style={{ marginTop: '2rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h4 className="text-gradient" style={{ fontSize: '1.2rem' }}>Results</h4>
+                        <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                            Success: <span style={{ color: '#10B981' }}>{results.summary.successful}</span> •
+                            Failed: <span style={{ color: '#EF4444' }}>{results.summary.failed}</span>
+                        </span>
+                    </div>
+
+                    {results.results.map((result, idx) => (
+                        <div key={idx} className="result-card animate-slide-up" style={{ animationDelay: `${idx * 0.1}s` }}>
+                            <h5 style={{ color: 'var(--color-primary)', fontSize: '1.1rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span>🔎</span> {result.query}
+                            </h5>
+
+                            {result.answer && (
+                                <div style={{
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    padding: '1rem',
+                                    borderRadius: '8px',
+                                    marginBottom: '1rem',
+                                    borderLeft: '2px solid var(--color-secondary)'
+                                }}>
+                                    <strong style={{ color: 'var(--color-secondary)', fontSize: '0.9rem', display: 'block', marginBottom: '0.25rem' }}>AI Answer:</strong>
+                                    <p style={{ fontSize: '0.95rem', lineHeight: '1.6' }}>{result.answer}</p>
+                                </div>
+                            )}
+
+                            <div>
+                                {result.results.map((r, rIdx) => (
+                                    <a
+                                        key={rIdx}
+                                        href={r.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ display: 'block', textDecoration: 'none', marginBottom: '1rem', padding: '0.5rem', borderRadius: '4px', transition: 'background 0.2s' }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                    >
+                                        <div style={{ color: 'var(--color-primary-hover)', fontWeight: '500', marginBottom: '0.2rem' }}>{r.title}</div>
+                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{r.content.substring(0, 180)}...</div>
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
