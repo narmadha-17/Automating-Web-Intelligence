@@ -1,6 +1,4 @@
 from pydantic_settings import BaseSettings
-from typing import List
-
 
 class Settings(BaseSettings):
     APP_NAME: str = "Web Intelligence API"
