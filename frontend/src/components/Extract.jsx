@@ -41,7 +41,11 @@ const Extract = ({ apiKey }) => {
             }
         } catch (err) {
             console.error('Beautify error:', err);
-            setError('Failed to beautify text. Please try again.');
+            const detail = err.response?.data?.detail;
+            const errorMsg = typeof detail === 'string' ? detail :
+                (Array.isArray(detail) ? detail.map(d => d.msg).join(', ') :
+                    (detail ? JSON.stringify(detail) : err.message));
+            setError(errorMsg || 'Failed to beautify text. Please try again.');
         } finally {
             setBeautifyLoading(false);
         }

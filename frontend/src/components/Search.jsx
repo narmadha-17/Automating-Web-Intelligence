@@ -55,7 +55,11 @@ const Search = ({ apiKey, activeTab }) => {
             }
         } catch (err) {
             console.error('Beautify error:', err);
-            setError('Failed to beautify text. Please try again.');
+            const detail = err.response?.data?.detail;
+            const errorMsg = typeof detail === 'string' ? detail :
+                (Array.isArray(detail) ? detail.map(d => d.msg).join(', ') :
+                    (detail ? JSON.stringify(detail) : err.message));
+            setError(errorMsg || 'Failed to beautify text. Please try again.');
         } finally {
             setBeautifyLoading(false);
         }
@@ -157,7 +161,7 @@ const Search = ({ apiKey, activeTab }) => {
                             className="btn btn-primary"
                             style={{ marginLeft: 'auto' }}
                         >
-                            {loading ? '🔍 Searching...' : '🔍 Perform Search'}
+                            {loading ? ' Searching...' : ' Perform Search'}
                         </button>
                     </div>
                 </form>
