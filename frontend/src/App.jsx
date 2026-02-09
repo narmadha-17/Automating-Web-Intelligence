@@ -4,6 +4,7 @@ import Search from './components/Search';
 import Extract from './components/Extract';
 import Crawl from './components/Crawl';
 import Map from './components/Map';
+import Dashboard from './components/Dashboard';
 import bearOpen from './assets/bear-eyes-open.png';
 import bearClosed from './assets/bear-eyes-closed.png';
 
@@ -24,6 +25,7 @@ function App() {
       case 'extract': return <Extract {...props} />;
       case 'crawl': return <Crawl {...props} />;
       case 'map': return <Map {...props} />;
+      case 'dashboard': return <Dashboard />;
       default: return <Search {...props} />;
     }
   };

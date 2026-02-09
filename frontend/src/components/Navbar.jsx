@@ -5,7 +5,8 @@ const Navbar = ({ activeTab, setActiveTab }) => {
         { id: 'search', label: 'Search' },
         { id: 'extract', label: 'Extract' },
         { id: 'crawl', label: 'Crawl' },
-        { id: 'map', label: 'Map' }
+        { id: 'map', label: 'Map' },
+        { id: 'dashboard', label: 'Dashboard' }
     ];
 
     return (
