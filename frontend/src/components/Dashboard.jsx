@@ -111,6 +111,7 @@ const Dashboard = () => {
             let payload = {};
             if (inputs.context) {
             }
+            // Construct payload based on node type
             switch (node.type) {
                 case 'search':
                     payload = { queries: [node.data.query || inputs.query], include_answer: true };
@@ -121,7 +122,9 @@ const Dashboard = () => {
                     });
                     if (!searchRes.ok) throw new Error(await searchRes.text());
                     const searchData = await searchRes.json();
-                    result = searchData;
+
+                    // Extract answer from the first result
+                    result = searchData.results?.[0]?.answer || "Search completed, but no answer was generated.";
                     break;
 
                 case 'extract':
@@ -133,7 +136,15 @@ const Dashboard = () => {
                     });
                     if (!extractRes.ok) throw new Error(await extractRes.text());
                     const extractData = await extractRes.json();
-                    result = extractData;
+
+                    // Prefer extraction answer, otherwise summarize content
+                    if (extractData.answer) {
+                        result = extractData.answer;
+                    } else if (extractData.results?.[0]?.content) {
+                        result = extractData.results[0].content;
+                    } else {
+                        result = "Content extracted, but no readable text was found.";
+                    }
                     break;
 
                 case 'crawl':
@@ -145,7 +156,10 @@ const Dashboard = () => {
                     });
                     if (!crawlRes.ok) throw new Error(await crawlRes.text());
                     const crawlData = await crawlRes.json();
-                    result = crawlData;
+
+                    // Provide a status summary for crawl
+                    const crawlCount = crawlData.results?.length || 0;
+                    result = `Crawl complete. Discovered and analyzed ${crawlCount} nested pages/resources from the target URL.`;
                     break;
 
                 case 'map':
@@ -157,7 +171,10 @@ const Dashboard = () => {
                     });
                     if (!mapRes.ok) throw new Error(await mapRes.text());
                     const mapData = await mapRes.json();
-                    result = mapData;
+
+                    // Provide a status summary for map
+                    const mapCount = mapData.results?.length || 0;
+                    result = `Mapping complete. Identified ${mapCount} unique endpoints and logical routes within the site structure.`;
                     break;
 
                 case 'qa':
@@ -177,8 +194,9 @@ const Dashboard = () => {
                     });
                     if (!qaRes.ok) throw new Error(await qaRes.text());
                     const qaData = await qaRes.json();
-                    const answer = qaData.results?.[0]?.answer || "No answer found.";
-                    result = qaData;
+
+                    // Extract the direct answer
+                    result = qaData.results?.[0]?.answer || "No specific answer could be determined from the provided question and context.";
                     break;
 
                 default:
@@ -218,17 +236,22 @@ const Dashboard = () => {
             for (const parent of parents) {
                 const parentResult = nodeResults.get(parent.id);
                 if (parentResult) {
+                    // Extract context (text) and URL for downstream nodes
                     if (parent.type === 'extract') {
-                        const text = parentResult.results?.[0]?.raw_content || parentResult.results?.[0]?.content;
+                        const text = parentResult.answer || parentResult.results?.[0]?.raw_content || parentResult.results?.[0]?.content;
                         if (text) inputs.context = text;
                     }
 
                     if (parent.type === 'search') {
-                        const url = parentResult.results?.[0]?.url;
+                        // For search, 'answer' is the most useful context
+                        const text = parentResult.answer;
+                        if (text) inputs.context = text;
+
+                        const url = parentResult.url;
                         if (url) inputs.url = url;
                     }
 
-                    if (parent.type === 'crawl') {
+                    if (parent.type === 'crawl' || parent.type === 'map') {
                         const url = parentResult.results?.[0]?.url;
                         if (url) inputs.url = url;
                     }

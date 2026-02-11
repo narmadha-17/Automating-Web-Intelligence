@@ -360,7 +360,7 @@ class TavilyService:
         
         return {
             "query": query,
-            "answer": data.get("answer", "No AI answer provided"),
+            "answer": data.get("answer") or "No AI answer provided",
             "results": formatted_results,
             "search_metadata": {
                 "search_depth": search_depth,

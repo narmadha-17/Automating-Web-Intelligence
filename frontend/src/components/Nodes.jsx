@@ -67,15 +67,17 @@ const ResultDisplay = ({ result }) => {
     if (!result) return null;
     return (
         <div style={{
-            marginTop: '0.5rem',
-            padding: '0.5rem',
-            background: 'rgba(0,0,0,0.4)',
-            borderRadius: '6px',
-            fontSize: '0.75rem',
-            maxHeight: '100px',
+            marginTop: '0.75rem',
+            padding: '0.75rem',
+            background: 'rgba(0,0,0,0.3)',
+            borderLeft: '2px solid rgba(59, 130, 246, 0.5)',
+            borderRadius: '0 6px 6px 0',
+            fontSize: '0.875rem',
+            maxHeight: '150px',
             overflowY: 'auto',
-            whiteSpace: 'pre-wrap',
-            fontFamily: 'monospace'
+            lineHeight: '1.5',
+            color: '#E5E7EB',
+            whiteSpace: 'pre-wrap'
         }}>
             {typeof result === 'object' ? JSON.stringify(result, null, 2) : result}
         </div>
@@ -107,7 +109,7 @@ export const SearchNode = memo(({ data, selected }) => {
 
                 <div style={statusStyle(data.status)}>
                     {data.status === 'running' && <span className="animate-spin">⌛</span>}
-                    {data.status || 'Idle'}
+                    {data.status || 'Status - Idle'}
                 </div>
 
                 <ResultDisplay result={data.result} />
@@ -143,7 +145,7 @@ export const CrawlNode = memo(({ data, selected }) => {
 
                 <div style={statusStyle(data.status)}>
                     {data.status === 'running' && <span className="animate-spin">⌛</span>}
-                    {data.status || 'Idle'}
+                    {data.status || 'Status - Idle'}
                 </div>
 
                 <ResultDisplay result={data.result} />
@@ -179,7 +181,7 @@ export const ExtractNode = memo(({ data, selected }) => {
 
                 <div style={statusStyle(data.status)}>
                     {data.status === 'running' && <span className="animate-spin">⌛</span>}
-                    {data.status || 'Idle'}
+                    {data.status || 'Status - Idle'}
                 </div>
 
                 <ResultDisplay result={data.result} />
@@ -215,7 +217,7 @@ export const MapNode = memo(({ data, selected }) => {
 
                 <div style={statusStyle(data.status)}>
                     {data.status === 'running' && <span className="animate-spin">⌛</span>}
-                    {data.status || 'Idle'}
+                    {data.status || 'Status - Idle'}
                 </div>
 
                 <ResultDisplay result={data.result} />
@@ -239,17 +241,6 @@ export const QANode = memo(({ data, selected }) => {
                 </div>
 
                 <div>
-                    <label style={labelStyle}>Context (Optional)</label>
-                    <textarea
-                        className="nodrag"
-                        style={{ ...inputStyle, minHeight: '60px', fontSize: '0.75rem' }}
-                        placeholder="Connect output from other nodes or type context..."
-                        defaultValue={data.context}
-                        onChange={(evt) => data.onContextChange(evt.target.value)}
-                    />
-                </div>
-
-                <div>
                     <label style={labelStyle}>Question</label>
                     <input
                         className="nodrag"
@@ -262,7 +253,7 @@ export const QANode = memo(({ data, selected }) => {
 
                 <div style={statusStyle(data.status)}>
                     {data.status === 'running' && <span className="animate-spin">⌛</span>}
-                    {data.status || 'Idle'}
+                    {data.status || 'Status - Idle'}
                 </div>
 
                 <ResultDisplay result={data.result} />
