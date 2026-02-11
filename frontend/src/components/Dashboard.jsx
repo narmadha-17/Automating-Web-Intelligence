@@ -63,18 +63,19 @@ const Dashboard = () => {
                 y: event.clientY,
             });
 
+            const nodeId = getId();
             const newNode = {
-                id: getId(),
+                id: nodeId,
                 type,
                 position,
                 data: {
                     label: `${type} node`,
                     status: 'idle',
                     result: null,
-                    onChange: (val) => updateNodeData(newNode.id, { query: val }),
-                    onUrlChange: (val) => updateNodeData(newNode.id, { url: val }),
-                    onContextChange: (val) => updateNodeData(newNode.id, { context: val }),
-                    onQuestionChange: (val) => updateNodeData(newNode.id, { question: val }),
+                    onChange: (val) => updateNodeData(nodeId, { query: val }),
+                    onUrlChange: (val) => updateNodeData(nodeId, { url: val }),
+                    onContextChange: (val) => updateNodeData(nodeId, { context: val }),
+                    onQuestionChange: (val) => updateNodeData(nodeId, { question: val }),
                 },
             };
 
@@ -107,13 +108,17 @@ const Dashboard = () => {
         updateNodeData(node.id, { status: 'running', result: null });
 
         try {
-            let result = null;
             let payload = {};
-            if (inputs.context) {
-            }
+            const context = inputs.context;
+
+            // Construct payload based on node type
             switch (node.type) {
                 case 'search':
-                    payload = { queries: [node.data.query || inputs.query], include_answer: true };
+                    let searchQuery = node.data.query || inputs.query;
+                    if (context) {
+                        searchQuery = `Question: ${searchQuery}\n\nContext for reference:\n${context}\n\nInstructions: Answer the question precisely using the provided context if relevant. If the context doesn't contain the answer, perform a search.`;
+                    }
+                    payload = { queries: [searchQuery], include_answer: true };
                     const searchRes = await fetch(`${API_BASE_URL}/web_search/search`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -121,11 +126,22 @@ const Dashboard = () => {
                     });
                     if (!searchRes.ok) throw new Error(await searchRes.text());
                     const searchData = await searchRes.json();
-                    result = searchData;
-                    break;
+
+                    // Display answer in UI, return full object for flow
+                    const searchAnswer = searchData.answer || (searchData.results?.[0]?.answer) || "Search completed, but no direct answer was generated. Check results below.";
+                    updateNodeData(node.id, { status: 'completed', result: searchAnswer });
+                    return searchData;
 
                 case 'extract':
-                    payload = { urls: [node.data.url || inputs.url] };
+                    const targetUrl = node.data.url || inputs.url;
+                    if (!targetUrl) throw new Error("No URL provided for extraction.");
+
+                    payload = {
+                        urls: [targetUrl],
+                        query: context || node.data.query || undefined,
+                        include_answer: true,
+                        extract_depth: 'advanced'
+                    };
                     const extractRes = await fetch(`${API_BASE_URL}/extract/`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -133,11 +149,25 @@ const Dashboard = () => {
                     });
                     if (!extractRes.ok) throw new Error(await extractRes.text());
                     const extractData = await extractRes.json();
-                    result = extractData;
-                    break;
+
+                    let extractText = "";
+                    if (extractData.answer && extractData.answer !== "No AI answer provided") {
+                        extractText = extractData.answer;
+                    } else if (extractData.results?.[0]?.content) {
+                        extractText = extractData.results[0].content;
+                    } else if (extractData.results?.[0]?.raw_content) {
+                        extractText = extractData.results[0].raw_content.substring(0, 1000) + "...";
+                    } else {
+                        extractText = "Content extracted, but no readable text was found.";
+                    }
+                    updateNodeData(node.id, { status: 'completed', result: extractText });
+                    return extractData;
 
                 case 'crawl':
-                    payload = { url: node.data.url || inputs.url };
+                    payload = {
+                        url: node.data.url || inputs.url,
+                        query: context || node.data.query // Use context as guiding query
+                    };
                     const crawlRes = await fetch(`${API_BASE_URL}/crawl/`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -145,8 +175,11 @@ const Dashboard = () => {
                     });
                     if (!crawlRes.ok) throw new Error(await crawlRes.text());
                     const crawlData = await crawlRes.json();
-                    result = crawlData;
-                    break;
+
+                    const crawlCount = crawlData.results?.length || 0;
+                    const crawlSummary = `Crawl complete. Discovered and analyzed ${crawlCount} nested pages/resources from the target URL.`;
+                    updateNodeData(node.id, { status: 'completed', result: crawlSummary });
+                    return crawlData;
 
                 case 'map':
                     payload = { url: node.data.url || inputs.url };
@@ -157,16 +190,19 @@ const Dashboard = () => {
                     });
                     if (!mapRes.ok) throw new Error(await mapRes.text());
                     const mapData = await mapRes.json();
-                    result = mapData;
-                    break;
+
+                    const mapCount = mapData.results?.length || 0;
+                    const mapSummary = `Mapping complete. Identified ${mapCount} unique endpoints and logical routes within the site structure.`;
+                    updateNodeData(node.id, { status: 'completed', result: mapSummary });
+                    return mapData;
 
                 case 'qa':
                     // Enhanced QA Logic
                     let question = node.data.question;
-                    const context = node.data.context || inputs.context;
+                    const qaContext = node.data.context || context;
 
-                    if (context) {
-                        question = `${question}\n\nContext:\n${context}`;
+                    if (qaContext) {
+                        question = `Question: ${question}\n\nContext to analyze:\n${qaContext}\n\nInstructions: Answer the question strictly based on the provided context. If unsure, say you don't know based on the context.`;
                     }
 
                     const qPayload = { queries: [question], include_answer: true };
@@ -177,16 +213,16 @@ const Dashboard = () => {
                     });
                     if (!qaRes.ok) throw new Error(await qaRes.text());
                     const qaData = await qaRes.json();
-                    const answer = qaData.results?.[0]?.answer || "No answer found.";
-                    result = qaData;
-                    break;
+
+                    const qaAnswer = qaData.results?.[0]?.answer || qaData.answer || "No specific answer could be determined from the provided question and context.";
+                    updateNodeData(node.id, { status: 'completed', result: qaAnswer });
+                    return qaData;
 
                 default:
-                    result = "Unknown node type";
+                    const unknownMsg = "Unknown node type";
+                    updateNodeData(node.id, { status: 'completed', result: unknownMsg });
+                    return unknownMsg;
             }
-
-            updateNodeData(node.id, { status: 'completed', result: result });
-            return result;
 
         } catch (error) {
             console.error("Node execution error:", error);
@@ -218,20 +254,22 @@ const Dashboard = () => {
             for (const parent of parents) {
                 const parentResult = nodeResults.get(parent.id);
                 if (parentResult) {
-                    if (parent.type === 'extract') {
-                        const text = parentResult.results?.[0]?.raw_content || parentResult.results?.[0]?.content;
-                        if (text) inputs.context = text;
-                    }
+                    // Centralized text extraction logic with full fallback chain
+                    const getBestText = (res) => {
+                        if (!res) return null;
+                        const potentialText = res.answer || (res.results?.[0]?.answer) || (res.results?.[0]?.content) || (res.results?.[0]?.raw_content);
+                        if (potentialText && potentialText !== "No AI answer provided" && !potentialText.includes("Content extracted, but no readable text was found")) {
+                            return potentialText;
+                        }
+                        return null;
+                    };
 
-                    if (parent.type === 'search') {
-                        const url = parentResult.results?.[0]?.url;
-                        if (url) inputs.url = url;
-                    }
+                    const text = getBestText(parentResult);
+                    if (text) inputs.context = (inputs.context ? inputs.context + "\n\n" : "") + text;
 
-                    if (parent.type === 'crawl') {
-                        const url = parentResult.results?.[0]?.url;
-                        if (url) inputs.url = url;
-                    }
+                    // Extract URL if relevant
+                    const url = parentResult.url || parentResult.results?.[0]?.url;
+                    if (url) inputs.url = url;
                 }
             }
 

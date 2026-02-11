@@ -41,6 +41,16 @@ async def extract(request: ExtractRequest) -> ExtractResponse:
         results = extract_data.get("results", [])
         failed_results = extract_data.get("failed_results", [])
         
+        if results:
+            logger.info(f"Successfully extracted {len(results)} items. Sample result URL: {results[0].get('url')}")
+            if extract_data.get("answer"):
+                logger.info(f"AI Answer generated: {extract_data.get('answer')[:100]}...")
+            else:
+                logger.info("No AI answer generated for this extraction.")
+        
+        if failed_results:
+            logger.warning(f"Failed to extract {len(failed_results)} URLs: {failed_results}")
+
         logger.info(f"Extraction successful for {len(results)} URLs, failed for {len(failed_results)} URLs")
         
         if results:
