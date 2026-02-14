@@ -296,10 +296,20 @@ const Dashboard = () => {
                     // Centralized text extraction logic with full fallback chain
                     const getBestText = (res) => {
                         if (!res) return null;
-                        const potentialText = res.answer || (res.results?.[0]?.answer) || (res.results?.[0]?.content) || (res.results?.[0]?.raw_content);
-                        if (potentialText && potentialText !== "No AI answer provided" && !potentialText.includes("Content extracted, but no readable text was found")) {
-                            return potentialText;
+
+                        // If there's a top-level AI answer, prioritize it
+                        if (res.answer && res.answer !== "No AI answer provided") return res.answer;
+
+                        // Otherwise, aggregate content from all results (useful for crawl results)
+                        if (res.results && Array.isArray(res.results)) {
+                            const texts = res.results
+                                .map(r => r.answer || r.content || r.raw_content)
+                                .filter(t => t && t !== "No AI answer provided" && !t.includes("Content extracted, but no readable text was found"))
+                                .slice(0, 10); // Limit to top 10 results to avoid context overflow
+
+                            return texts.join("\n\n---\n\n");
                         }
+
                         return null;
                     };
 
