@@ -37,6 +37,8 @@ const Dashboard = () => {
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
     const [isRunning, setIsRunning] = useState(false);
+    const [prompt, setPrompt] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
 
     const onConnect = useCallback(
         (params) => setEdges((eds) => addEdge(params, eds)),
@@ -231,6 +233,43 @@ const Dashboard = () => {
         }
     };
 
+    const handleAutoGenerate = async () => {
+        if (!prompt.trim()) return;
+        setIsGenerating(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/flow/generate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt })
+            });
+            if (!response.ok) throw new Error(await response.text());
+            const data = await response.json();
+
+            // Transform generated nodes to include necessary data and handlers
+            const newNodes = data.nodes.map(node => ({
+                ...node,
+                data: {
+                    ...node.data,
+                    status: 'idle',
+                    result: null,
+                    onChange: (val) => updateNodeData(node.id, { query: val }),
+                    onUrlChange: (val) => updateNodeData(node.id, { url: val }),
+                    onContextChange: (val) => updateNodeData(node.id, { context: val }),
+                    onQuestionChange: (val) => updateNodeData(node.id, { question: val }),
+                }
+            }));
+
+            setNodes(newNodes);
+            setEdges(data.edges);
+            setPrompt('');
+        } catch (error) {
+            console.error("Flow generation error:", error);
+            alert("Failed to generate flow: " + error.message);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
     const executeFlow = async () => {
         setIsRunning(true);
 
@@ -344,7 +383,45 @@ const Dashboard = () => {
                     🧠 Ask / QA
                 </div>
 
-                <div style={{ flex: 1 }}></div>
+                <div style={{ flex: 1, display: 'flex', gap: '0.5rem', alignItems: 'center', minWidth: '300px' }}>
+                    <input
+                        type="text"
+                        placeholder="Describe what you want to do... (e.g. Find AI news and extract content)"
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        style={{
+                            flex: 1,
+                            padding: '0.5rem 1rem',
+                            background: 'rgba(255,255,255,0.05)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '6px',
+                            color: '#fff',
+                            outline: 'none'
+                        }}
+                        onKeyPress={(e) => e.key === 'Enter' && handleAutoGenerate()}
+                    />
+                    <button
+                        onClick={handleAutoGenerate}
+                        disabled={isGenerating || !prompt.trim()}
+                        style={{
+                            padding: '0.5rem 1rem',
+                            background: isGenerating ? '#4B5563' : 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: (isGenerating || !prompt.trim()) ? 'not-allowed' : 'pointer',
+                            fontSize: '0.9rem',
+                            fontWeight: '600',
+                            whiteSpace: 'nowrap',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                        }}
+                    >
+                        {isGenerating ? 'Generating...' : '✨ Auto-Flow'}
+                    </button>
+                </div>
 
                 <button
                     onClick={executeFlow}

@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     TAVILY_MAX_RESULTS: int = 5
     TAVILY_SEARCH_DEPTH: str = "advanced"
     
+    OPENAI_API_KEY: str
+    
     MONGODB_URI: str
     MONGODB_DB_NAME: str = "web_intelligence"
     MONGODB_COLLECTION: str = "search_results"
