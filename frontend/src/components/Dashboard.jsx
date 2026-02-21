@@ -135,11 +135,15 @@ const Dashboard = () => {
                     return searchData;
 
                 case 'extract':
-                    const targetUrl = node.data.url || inputs.url;
-                    if (!targetUrl) throw new Error("No URL provided for extraction.");
+                    // Accept multi-URL array from upstream Map node, or fall back to single URL
+                    const targetUrls = inputs.urls || (node.data.url ? [node.data.url] : null) || (inputs.url ? [inputs.url] : null);
+                    if (!targetUrls || targetUrls.length === 0) throw new Error("No URL provided for extraction.");
+
+                    // Limit to top 5 URLs to avoid overloading the API
+                    const limitedUrls = targetUrls.slice(0, node.data.limit || 5);
 
                     payload = {
-                        urls: [targetUrl],
+                        urls: limitedUrls,
                         query: context || node.data.query || undefined,
                         include_answer: true,
                         extract_depth: 'advanced'
@@ -194,7 +198,8 @@ const Dashboard = () => {
                     const mapData = await mapRes.json();
 
                     const mapCount = mapData.results?.length || 0;
-                    const mapSummary = `Mapping complete. Identified ${mapCount} unique endpoints and logical routes within the site structure.`;
+                    // mapData.results is List[str] – plain URL strings
+                    const mapSummary = `Map complete. Found ${mapCount} URLs.\n${(mapData.results || []).slice(0, 5).join('\n')}`;
                     updateNodeData(node.id, { status: 'completed', result: mapSummary });
                     return mapData;
 
@@ -293,32 +298,45 @@ const Dashboard = () => {
             for (const parent of parents) {
                 const parentResult = nodeResults.get(parent.id);
                 if (parentResult) {
-                    // Centralized text extraction logic with full fallback chain
-                    const getBestText = (res) => {
-                        if (!res) return null;
-
-                        // If there's a top-level AI answer, prioritize it
-                        if (res.answer && res.answer !== "No AI answer provided") return res.answer;
-
-                        // Otherwise, aggregate content from all results (useful for crawl results)
-                        if (res.results && Array.isArray(res.results)) {
-                            const texts = res.results
-                                .map(r => r.answer || r.content || r.raw_content)
-                                .filter(t => t && t !== "No AI answer provided" && !t.includes("Content extracted, but no readable text was found"))
-                                .slice(0, 10); // Limit to top 10 results to avoid context overflow
-
-                            return texts.join("\n\n---\n\n");
+                    // --- Map node: results is List[str] (plain URL strings) ---
+                    if (
+                        parentResult.results &&
+                        Array.isArray(parentResult.results) &&
+                        parentResult.results.length > 0 &&
+                        typeof parentResult.results[0] === 'string'
+                    ) {
+                        // Pass the list of URLs so Extract can fetch multiple at once
+                        const urlList = parentResult.results.filter(u => u.startsWith('http'));
+                        if (urlList.length > 0) {
+                            inputs.urls = urlList; // array passed to extract
+                            inputs.url = urlList[0]; // single fallback
                         }
+                    } else {
+                        // Centralized text extraction logic with full fallback chain
+                        const getBestText = (res) => {
+                            if (!res) return null;
 
-                        return null;
-                    };
+                            // If there's a top-level AI answer, prioritize it
+                            if (res.answer && res.answer !== "No AI answer provided") return res.answer;
 
-                    const text = getBestText(parentResult);
-                    if (text) inputs.context = (inputs.context ? inputs.context + "\n\n" : "") + text;
+                            // Otherwise, aggregate content from all results
+                            if (res.results && Array.isArray(res.results)) {
+                                const texts = res.results
+                                    .map(r => r.answer || r.content || r.raw_content)
+                                    .filter(t => t && t !== "No AI answer provided" && !t.includes("Content extracted, but no readable text was found"))
+                                    .slice(0, 10);
+                                return texts.join("\n\n---\n\n");
+                            }
+                            return null;
+                        };
 
-                    // Extract URL if relevant
-                    const url = parentResult.url || parentResult.results?.[0]?.url;
-                    if (url) inputs.url = url;
+                        const text = getBestText(parentResult);
+                        if (text) inputs.context = (inputs.context ? inputs.context + "\n\n" : "") + text;
+
+                        // Extract single URL if relevant
+                        const url = parentResult.url || parentResult.results?.[0]?.url;
+                        if (url) inputs.url = url;
+                    }
                 }
             }
 
@@ -342,71 +360,91 @@ const Dashboard = () => {
     };
 
     return (
-        <div className="dndflow" style={{ width: '100%', height: '80vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="dndflow" style={{ width: '100%', height: '80vh', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Tools Section */}
             <div className="glass-panel" style={{
-                marginBottom: '1rem',
-                padding: '1rem',
+                padding: '1.5rem',
                 display: 'flex',
                 gap: '1rem',
                 alignItems: 'center',
-                flexWrap: 'wrap'
+                flexWrap: 'wrap',
+                background: 'linear-gradient(135deg, rgba(44, 36, 30, 0.8) 0%, rgba(50, 42, 35, 0.8) 100%)',
+                border: '2px solid rgba(212, 163, 115, 0.3)',
+                backdropFilter: 'blur(16px)'
             }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Drag Tools:</span>
-                <div
-                    className="dndnode input"
-                    onDragStart={(event) => onDragStart(event, 'search')}
-                    draggable
-                    style={{ cursor: 'grab', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}
-                >
-                    🔍 Search
-                </div>
-                <div
-                    className="dndnode"
-                    onDragStart={(event) => onDragStart(event, 'crawl')}
-                    draggable
-                    style={{ cursor: 'grab', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}
-                >
-                    🕷️ Crawl
-                </div>
-                <div
-                    className="dndnode output"
-                    onDragStart={(event) => onDragStart(event, 'extract')}
-                    draggable
-                    style={{ cursor: 'grab', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}
-                >
-                    📄 Extract
-                </div>
-                <div
-                    className="dndnode output"
-                    onDragStart={(event) => onDragStart(event, 'map')}
-                    draggable
-                    style={{ cursor: 'grab', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}
-                >
-                    🗺️ Map
-                </div>
-                <div
-                    className="dndnode output"
-                    onDragStart={(event) => onDragStart(event, 'qa')}
-                    draggable
-                    style={{ cursor: 'grab', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}
-                >
-                    🧠 Ask / QA
+                {/* Tools Label */}
+                <span style={{ color: '#D4A373', fontSize: '0.95rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Drag Tools:</span>
+
+                {/* Drag Tool Buttons */}
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div
+                        className="dndnode input"
+                        onDragStart={(event) => onDragStart(event, 'search')}
+                        draggable
+                        style={{ cursor: 'grab', padding: '0.6rem 1.2rem', background: 'rgba(100, 150, 255, 0.15)', borderRadius: '8px', border: '1.5px solid rgba(100, 150, 255, 0.3)', hover: { background: 'rgba(100, 150, 255, 0.25)' }, transition: 'all 0.2s', fontSize: '0.9rem', fontWeight: '600', color: '#60A5FA' }}
+                    >
+                        🔍 Search
+                    </div>
+                    <div
+                        className="dndnode"
+                        onDragStart={(event) => onDragStart(event, 'crawl')}
+                        draggable
+                        style={{ cursor: 'grab', padding: '0.6rem 1.2rem', background: 'rgba(100, 150, 255, 0.15)', borderRadius: '8px', border: '1.5px solid rgba(100, 150, 255, 0.3)', transition: 'all 0.2s', fontSize: '0.9rem', fontWeight: '600', color: '#60A5FA' }}
+                    >
+                        🕷️ Crawl
+                    </div>
+                    <div
+                        className="dndnode output"
+                        onDragStart={(event) => onDragStart(event, 'extract')}
+                        draggable
+                        style={{ cursor: 'grab', padding: '0.6rem 1.2rem', background: 'rgba(100, 150, 255, 0.15)', borderRadius: '8px', border: '1.5px solid rgba(100, 150, 255, 0.3)', transition: 'all 0.2s', fontSize: '0.9rem', fontWeight: '600', color: '#60A5FA' }}
+                    >
+                        📄 Extract
+                    </div>
+                    <div
+                        className="dndnode output"
+                        onDragStart={(event) => onDragStart(event, 'map')}
+                        draggable
+                        style={{ cursor: 'grab', padding: '0.6rem 1.2rem', background: 'rgba(100, 150, 255, 0.15)', borderRadius: '8px', border: '1.5px solid rgba(100, 150, 255, 0.3)', transition: 'all 0.2s', fontSize: '0.9rem', fontWeight: '600', color: '#60A5FA' }}
+                    >
+                        🗺️ Map
+                    </div>
+                    <div
+                        className="dndnode output"
+                        onDragStart={(event) => onDragStart(event, 'qa')}
+                        draggable
+                        style={{ cursor: 'grab', padding: '0.6rem 1.2rem', background: 'rgba(100, 150, 255, 0.15)', borderRadius: '8px', border: '1.5px solid rgba(100, 150, 255, 0.3)', transition: 'all 0.2s', fontSize: '0.9rem', fontWeight: '600', color: '#60A5FA' }}
+                    >
+                        🧠 Ask / QA
+                    </div>
                 </div>
 
-                <div style={{ flex: 1, display: 'flex', gap: '0.5rem', alignItems: 'center', minWidth: '300px' }}>
+                {/* Auto-Generate and Run Buttons */}
+                <div style={{ flex: 1, display: 'flex', gap: '0.75rem', alignItems: 'center', minWidth: '350px' }}>
                     <input
                         type="text"
-                        placeholder="Describe what you want to do... (e.g. Find AI news and extract content)"
+                        placeholder="Describe your task... (e.g., Find AI news and extract content)"
                         value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
                         style={{
                             flex: 1,
-                            padding: '0.5rem 1rem',
-                            background: 'rgba(255,255,255,0.05)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '6px',
+                            padding: '0.7rem 1.2rem',
+                            background: 'rgba(0, 0, 0, 0.2)',
+                            border: '1.5px solid rgba(212, 163, 115, 0.3)',
+                            borderRadius: '8px',
                             color: '#fff',
-                            outline: 'none'
+                            outline: 'none',
+                            fontSize: '0.9rem',
+                            fontFamily: 'Outfit, sans-serif',
+                            transition: 'all 0.3s'
+                        }}
+                        onFocus={(e) => {
+                            e.target.style.borderColor = 'rgba(212, 163, 115, 0.6)';
+                            e.target.style.background = 'rgba(0, 0, 0, 0.3)';
+                        }}
+                        onBlur={(e) => {
+                            e.target.style.borderColor = 'rgba(212, 163, 115, 0.3)';
+                            e.target.style.background = 'rgba(0, 0, 0, 0.2)';
                         }}
                         onKeyPress={(e) => e.key === 'Enter' && handleAutoGenerate()}
                     />
@@ -414,11 +452,11 @@ const Dashboard = () => {
                         onClick={handleAutoGenerate}
                         disabled={isGenerating || !prompt.trim()}
                         style={{
-                            padding: '0.5rem 1rem',
-                            background: isGenerating ? '#4B5563' : 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                            padding: '0.7rem 1.5rem',
+                            background: isGenerating ? '#4B5563' : 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
                             color: '#fff',
                             border: 'none',
-                            borderRadius: '6px',
+                            borderRadius: '8px',
                             cursor: (isGenerating || !prompt.trim()) ? 'not-allowed' : 'pointer',
                             fontSize: '0.9rem',
                             fontWeight: '600',
@@ -426,32 +464,60 @@ const Dashboard = () => {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '0.5rem',
-                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                            boxShadow: '0 4px 12px rgba(168, 85, 247, 0.3)',
+                            transition: 'all 0.3s'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!isGenerating && prompt.trim()) {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 6px 20px rgba(168, 85, 247, 0.4)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = '0 4px 12px rgba(168, 85, 247, 0.3)';
                         }}
                     >
                         {isGenerating ? 'Generating...' : '✨ Auto-Flow'}
                     </button>
                 </div>
 
+                {/* Run Button */}
                 <button
                     onClick={executeFlow}
                     disabled={isRunning}
                     style={{
-                        padding: '0.5rem 1.5rem',
-                        background: isRunning ? '#4B5563' : '#3B82F6',
+                        padding: '0.7rem 1.8rem',
+                        background: isRunning ? '#4B5563' : 'linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%)',
                         color: '#fff',
                         border: 'none',
-                        borderRadius: '6px',
+                        borderRadius: '8px',
                         cursor: isRunning ? 'not-allowed' : 'pointer',
-                        fontWeight: 'bold',
-                        transition: 'background 0.2s'
+                        fontWeight: '700',
+                        fontSize: '0.95rem',
+                        transition: 'all 0.3s',
+                        boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                    }}
+                    onMouseEnter={(e) => {
+                        if (!isRunning) {
+                            e.target.style.transform = 'translateY(-2px)';
+                            e.target.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.4)';
+                        }
+                    }}
+                    onMouseLeave={(e) => {
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
                     }}
                 >
-                    {isRunning ? 'Running...' : '▶ Run Flow'}
+                    {isRunning ? '⏳ Running...' : '▶ Run Flow'}
                 </button>
             </div>
 
-            <div className="reactflow-wrapper" ref={reactFlowWrapper} style={{ flex: 1, border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', overflow: 'hidden' }}>
+            {/* ReactFlow Canvas */}
+            <div className="reactflow-wrapper" ref={reactFlowWrapper} style={{ flex: 1, border: '2px solid rgba(212, 163, 115, 0.3)', borderRadius: '16px', overflow: 'hidden', background: 'linear-gradient(135deg, rgba(18, 16, 14, 0.9) 0%, rgba(30, 25, 20, 0.9) 100%)' }}>
                 <ReactFlow
                     nodes={nodes}
                     edges={edges}
@@ -463,10 +529,10 @@ const Dashboard = () => {
                     onDragOver={onDragOver}
                     nodeTypes={nodeTypes}
                     fitView
-                    style={{ background: 'rgba(0,0,0,0.2)' }}
+                    style={{ background: 'transparent' }}
                 >
-                    <Controls style={{ fill: '#fff' }} />
-                    <Background color="#aaa" gap={16} />
+                    <Controls style={{ fill: '#D4A373' }} />
+                    <Background color="rgba(212, 163, 115, 0.1)" gap={20} />
                 </ReactFlow>
             </div>
         </div>

@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from typing import Optional
 
 class Settings(BaseSettings):
     APP_NAME: str = "Web Intelligence API"
@@ -15,13 +16,13 @@ class Settings(BaseSettings):
             return ["*"]
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
     
-    TAVILY_API_KEY: str
+    TAVILY_API_KEY: Optional[str] = None
     TAVILY_BASE_URL: str = "https://api.tavily.com"
     TAVILY_TIMEOUT: int = 30
     TAVILY_MAX_RESULTS: int = 5
     TAVILY_SEARCH_DEPTH: str = "advanced"
     
-    OPENAI_API_KEY: str
+    OPENAI_API_KEY: Optional[str] = None
     
     MONGODB_URI: str
     MONGODB_DB_NAME: str = "web_intelligence"
@@ -33,3 +34,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
