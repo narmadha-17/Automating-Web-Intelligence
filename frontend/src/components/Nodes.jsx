@@ -80,8 +80,26 @@ const ResultDisplay = ({ result }) => {
 
     if (!result) return null;
 
-    const resultText = typeof result === 'object' ? JSON.stringify(result, null, 2) : result;
-    const isLongResult = resultText.length > 200;
+    // Special handling for results that are arrays of URLs
+    let isUrlArray = false;
+    let displayContent = result;
+    
+    if (Array.isArray(result) && result.length > 0 && typeof result[0] === 'string' && result[0].startsWith('http')) {
+        isUrlArray = true;
+        displayContent = result.map((url, idx) => `${idx + 1}. ${url}`).join('\n');
+    } else if (typeof result === 'object' && result.results && Array.isArray(result.results)) {
+        // Handle objects with results array
+        if (result.results.length > 0 && typeof result.results[0] === 'string' && result.results[0].startsWith('http')) {
+            isUrlArray = true;
+            displayContent = result.results.map((url, idx) => `${idx + 1}. ${url}`).join('\n');
+        } else {
+            displayContent = JSON.stringify(result, null, 2);
+        }
+    } else {
+        displayContent = typeof result === 'object' ? JSON.stringify(result, null, 2) : result;
+    }
+
+    const isLongResult = displayContent.length > 250;
 
     return (
         <div style={{
@@ -90,18 +108,22 @@ const ResultDisplay = ({ result }) => {
             background: 'rgba(0, 0, 0, 0.4)',
             border: '1.5px solid rgba(59, 130, 246, 0.2)',
             borderRadius: '10px',
-            fontSize: '0.85rem',
-            overflow: isExpanded ? 'visible' : 'hidden',
-            maxHeight: isExpanded ? 'none' : '180px',
-            lineHeight: '1.6',
+            fontSize: '0.8rem',
+            overflow: isExpanded ? 'auto' : 'hidden',
+            maxHeight: isExpanded ? '500px' : '160px',
+            lineHeight: '1.7',
             color: '#E5E7EB',
             whiteSpace: 'pre-wrap',
             wordBreak: 'break-word',
             transition: 'all 0.3s',
             flex: isExpanded ? 'initial' : '1',
-            minHeight: '80px'
+            minHeight: '80px',
+            display: 'flex',
+            flexDirection: 'column'
         }}>
-            {resultText}
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+                {displayContent}
+            </div>
             {isLongResult && (
                 <button
                     onClick={() => setIsExpanded(!isExpanded)}
@@ -115,7 +137,8 @@ const ResultDisplay = ({ result }) => {
                         cursor: 'pointer',
                         fontSize: '0.75rem',
                         fontWeight: '600',
-                        transition: 'all 0.2s'
+                        transition: 'all 0.2s',
+                        alignSelf: 'flex-start'
                     }}
                     onMouseEnter={(e) => {
                         e.target.style.background = 'rgba(212, 163, 115, 0.3)';

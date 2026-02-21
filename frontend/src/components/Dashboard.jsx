@@ -182,9 +182,12 @@ const Dashboard = () => {
                     if (!crawlRes.ok) throw new Error(await crawlRes.text());
                     const crawlData = await crawlRes.json();
 
-                    const crawlCount = crawlData.results?.length || 0;
-                    const crawlSummary = `Crawl complete. Discovered and analyzed ${crawlCount} nested pages/resources from the target URL.`;
-                    updateNodeData(node.id, { status: 'completed', result: crawlSummary });
+                    // Display discovered URLs from crawl
+                    const crawlUrls = crawlData.results || [];
+                    const crawlSummary = crawlUrls.length > 0 
+                        ? `Crawl complete. Discovered ${crawlUrls.length} nested pages/resources:\n${crawlUrls.slice(0, 10).join('\n')}${crawlUrls.length > 10 ? `\n... and ${crawlUrls.length - 10} more` : ''}`
+                        : 'Crawl complete. No nested pages found.';
+                    updateNodeData(node.id, { status: 'completed', result: crawlUrls.length > 0 ? crawlUrls : crawlSummary });
                     return crawlData;
 
                 case 'map':
@@ -198,9 +201,9 @@ const Dashboard = () => {
                     const mapData = await mapRes.json();
 
                     const mapCount = mapData.results?.length || 0;
-                    // mapData.results is List[str] – plain URL strings
-                    const mapSummary = `Map complete. Found ${mapCount} URLs.\n${(mapData.results || []).slice(0, 5).join('\n')}`;
-                    updateNodeData(node.id, { status: 'completed', result: mapSummary });
+                    // Store the full results array for display
+                    const urlList = mapData.results || [];
+                    updateNodeData(node.id, { status: 'completed', result: urlList });
                     return mapData;
 
                 case 'qa':
@@ -250,10 +253,14 @@ const Dashboard = () => {
             if (!response.ok) throw new Error(await response.text());
             const data = await response.json();
 
-            // Transform generated nodes to include necessary data and handlers
-            const newNodes = data.nodes.map(node => ({
-                ...node,
-                data: {
+            // Extract URLs from prompt
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const extractedUrls = prompt.match(urlRegex) || [];
+            const primaryUrl = extractedUrls[0] || '';
+
+            // Transform generated nodes to include necessary data, handlers, and pre-filled URLs
+            const newNodes = data.nodes.map(node => {
+                const nodeData = {
                     ...node.data,
                     status: 'idle',
                     result: null,
@@ -261,8 +268,18 @@ const Dashboard = () => {
                     onUrlChange: (val) => updateNodeData(node.id, { url: val }),
                     onContextChange: (val) => updateNodeData(node.id, { context: val }),
                     onQuestionChange: (val) => updateNodeData(node.id, { question: val }),
+                };
+
+                // Pre-fill URL fields for nodes that need them (Map, Extract, Crawl)
+                if ((node.type === 'map' || node.type === 'extract' || node.type === 'crawl') && !nodeData.url && primaryUrl) {
+                    nodeData.url = primaryUrl;
                 }
-            }));
+
+                return {
+                    ...node,
+                    data: nodeData
+                };
+            });
 
             setNodes(newNodes);
             setEdges(data.edges);
