@@ -24,12 +24,38 @@ class FlowGenerationResponse(BaseModel):
 )
 async def generate_flow(request: FlowGenerationRequest) -> FlowGenerationResponse:
     try:
+        if not request.prompt or not request.prompt.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Prompt cannot be empty"
+            )
+        
         logger.info(f"Received flow generation request for: {request.prompt}")
         flow = await flow_generation_service.generate_flow(request.prompt)
-        return FlowGenerationResponse(**flow)
+        
+        # Validate the response structure
+        if not isinstance(flow, dict):
+            logger.error(f"Invalid flow structure: {type(flow)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Flow generation returned invalid structure"
+            )
+        
+        if "nodes" not in flow or "edges" not in flow:
+            logger.error(f"Missing nodes or edges in flow: {flow}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Flow generation returned incomplete structure"
+            )
+        
+        logger.info(f"Successfully generated flow with {len(flow['nodes'])} nodes and {len(flow['edges'])} edges")
+        return FlowGenerationResponse(nodes=flow["nodes"], edges=flow["edges"])
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error in flow generation endpoint: {str(e)}")
+        logger.error(f"Error in flow generation endpoint: {type(e).__name__}: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
+            detail=f"Flow generation failed: {str(e)}"
         )

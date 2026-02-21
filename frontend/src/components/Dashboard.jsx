@@ -39,6 +39,8 @@ const Dashboard = () => {
     const [isRunning, setIsRunning] = useState(false);
     const [prompt, setPrompt] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
+    const [originalPrompt, setOriginalPrompt] = useState('');
+    const [flowGenerated, setFlowGenerated] = useState(false);
 
     const onConnect = useCallback(
         (params) => setEdges((eds) => addEdge(params, eds)),
@@ -117,9 +119,21 @@ const Dashboard = () => {
             switch (node.type) {
                 case 'search':
                     let searchQuery = node.data.query || inputs.query;
+                    
+                    // Tavily API has 400 character limit for queries
+                    // If context is added, keep the query short to avoid exceeding limit
                     if (context) {
-                        searchQuery = `Question: ${searchQuery}\n\nContext for reference:\n${context}\n\nInstructions: Answer the question precisely using the provided context if relevant. If the context doesn't contain the answer, perform a search.`;
+                        // Truncate context to avoid exceeding 400 char limit
+                        const maxContextLength = 100;
+                        const truncatedContext = context.length > maxContextLength 
+                            ? context.substring(0, maxContextLength) + '...'
+                            : context;
+                        searchQuery = `${searchQuery} (Context: ${truncatedContext})`.substring(0, 380);
+                    } else {
+                        // Keep query under 400 chars
+                        searchQuery = searchQuery.substring(0, 380);
                     }
+                    
                     payload = { queries: [searchQuery], include_answer: true };
                     const searchRes = await fetch(`${API_BASE_URL}/web_search/search`, {
                         method: 'POST',
@@ -201,32 +215,9 @@ const Dashboard = () => {
                     const mapData = await mapRes.json();
 
                     const mapCount = mapData.results?.length || 0;
-                    // Store the full results array for display
                     const urlList = mapData.results || [];
                     updateNodeData(node.id, { status: 'completed', result: urlList });
                     return mapData;
-
-                case 'qa':
-                    // Enhanced QA Logic
-                    let question = node.data.question;
-                    const qaContext = node.data.context || context;
-
-                    if (qaContext) {
-                        question = `Question: ${question}\n\nContext to analyze:\n${qaContext}\n\nInstructions: Answer the question strictly based on the provided context. If unsure, say you don't know based on the context.`;
-                    }
-
-                    const qPayload = { queries: [question], include_answer: true };
-                    const qaRes = await fetch(`${API_BASE_URL}/web_search/search`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(qPayload)
-                    });
-                    if (!qaRes.ok) throw new Error(await qaRes.text());
-                    const qaData = await qaRes.json();
-
-                    const qaAnswer = qaData.results?.[0]?.answer || qaData.answer || "No specific answer could be determined from the provided question and context.";
-                    updateNodeData(node.id, { status: 'completed', result: qaAnswer });
-                    return qaData;
 
                 default:
                     const unknownMsg = "Unknown node type";
@@ -253,6 +244,9 @@ const Dashboard = () => {
             if (!response.ok) throw new Error(await response.text());
             const data = await response.json();
 
+            // Store original prompt for display and reload
+            setOriginalPrompt(prompt);
+
             // Extract URLs from prompt
             const urlRegex = /(https?:\/\/[^\s]+)/g;
             const extractedUrls = prompt.match(urlRegex) || [];
@@ -264,6 +258,7 @@ const Dashboard = () => {
                     ...node.data,
                     status: 'idle',
                     result: null,
+                    originalPrompt: prompt,
                     onChange: (val) => updateNodeData(node.id, { query: val }),
                     onUrlChange: (val) => updateNodeData(node.id, { url: val }),
                     onContextChange: (val) => updateNodeData(node.id, { context: val }),
@@ -283,13 +278,79 @@ const Dashboard = () => {
 
             setNodes(newNodes);
             setEdges(data.edges);
-            setPrompt('');
+            setFlowGenerated(true);
+            // Don't clear the prompt - keep it for display
         } catch (error) {
             console.error("Flow generation error:", error);
             alert("Failed to generate flow: " + error.message);
         } finally {
             setIsGenerating(false);
         }
+    };
+
+    const handleReloadFlow = async () => {
+        if (!originalPrompt.trim()) return;
+        // Reset the flow and generate fresh
+        setNodes([]);
+        setEdges([]);
+        setFlowGenerated(false);
+        setPrompt(originalPrompt);
+        
+        // Trigger auto-generate with the original prompt after a short delay
+        setTimeout(() => {
+            // Simulate the auto-generate with the original prompt
+            const tempPrompt = originalPrompt;
+            (async () => {
+                setIsGenerating(true);
+                try {
+                    const response = await fetch(`${API_BASE_URL}/flow/generate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: tempPrompt })
+                    });
+                    if (!response.ok) throw new Error(await response.text());
+                    const data = await response.json();
+
+                    // Extract URLs from prompt
+                    const urlRegex = /(https?:\/\/[^\s]+)/g;
+                    const extractedUrls = tempPrompt.match(urlRegex) || [];
+                    const primaryUrl = extractedUrls[0] || '';
+
+                    // Transform generated nodes
+                    const newNodes = data.nodes.map(node => {
+                        const nodeData = {
+                            ...node.data,
+                            status: 'idle',
+                            result: null,
+                            originalPrompt: tempPrompt,
+                            onChange: (val) => updateNodeData(node.id, { query: val }),
+                            onUrlChange: (val) => updateNodeData(node.id, { url: val }),
+                            onContextChange: (val) => updateNodeData(node.id, { context: val }),
+                            onQuestionChange: (val) => updateNodeData(node.id, { question: val }),
+                        };
+
+                        if ((node.type === 'map' || node.type === 'extract' || node.type === 'crawl') && !nodeData.url && primaryUrl) {
+                            nodeData.url = primaryUrl;
+                        }
+
+                        return {
+                            ...node,
+                            data: nodeData
+                        };
+                    });
+
+                    setNodes(newNodes);
+                    setEdges(data.edges);
+                    setFlowGenerated(true);
+                    setPrompt(tempPrompt);
+                } catch (error) {
+                    console.error("Flow regeneration error:", error);
+                    alert("Failed to regenerate flow: " + error.message);
+                } finally {
+                    setIsGenerating(false);
+                }
+            })();
+        }, 100);
     };
 
     const executeFlow = async () => {
@@ -426,14 +487,7 @@ const Dashboard = () => {
                     >
                         🗺️ Map
                     </div>
-                    <div
-                        className="dndnode output"
-                        onDragStart={(event) => onDragStart(event, 'qa')}
-                        draggable
-                        style={{ cursor: 'grab', padding: '0.6rem 1.2rem', background: 'rgba(100, 150, 255, 0.15)', borderRadius: '8px', border: '1.5px solid rgba(100, 150, 255, 0.3)', transition: 'all 0.2s', fontSize: '0.9rem', fontWeight: '600', color: '#60A5FA' }}
-                    >
-                        🧠 Ask / QA
-                    </div>
+
                 </div>
 
                 {/* Auto-Generate and Run Buttons */}
@@ -531,7 +585,59 @@ const Dashboard = () => {
                 >
                     {isRunning ? '⏳ Running...' : '▶ Run Flow'}
                 </button>
+
+                {/* Reload Button - appears when flow is generated */}
+                {flowGenerated && (
+                    <button
+                        onClick={handleReloadFlow}
+                        disabled={isGenerating}
+                        style={{
+                            padding: '0.7rem 1.5rem',
+                            background: isGenerating ? '#4B5563' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: isGenerating ? 'not-allowed' : 'pointer',
+                            fontWeight: '600',
+                            fontSize: '0.95rem',
+                            transition: 'all 0.3s',
+                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!isGenerating) {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
+                        }}
+                        title="Generate a fresh flow with the same query"
+                    >
+                        {isGenerating ? '⏳ Loading...' : '↻ Reload Flow'}
+                    </button>
+                )}
             </div>
+
+            {/* Display current query - shown when flow is generated */}
+            {flowGenerated && originalPrompt && (
+                <div style={{
+                    padding: '0.8rem 1.2rem',
+                    background: 'linear-gradient(135deg, rgba(34, 40, 49, 0.7) 0%, rgba(40, 45, 55, 0.7) 100%)',
+                    border: '1px solid rgba(212, 163, 115, 0.4)',
+                    borderRadius: '8px',
+                    color: '#E8D4BA',
+                    fontSize: '0.9rem',
+                    fontStyle: 'italic',
+                    maxWidth: '600px'
+                }}>
+                    <span style={{ color: '#D4A373', fontWeight: '600' }}>Query:</span> {originalPrompt}
+                </div>
+            )}
 
             {/* ReactFlow Canvas */}
             <div className="reactflow-wrapper" ref={reactFlowWrapper} style={{ flex: 1, border: '2px solid rgba(212, 163, 115, 0.3)', borderRadius: '16px', overflow: 'hidden', background: 'linear-gradient(135deg, rgba(18, 16, 14, 0.9) 0%, rgba(30, 25, 20, 0.9) 100%)' }}>

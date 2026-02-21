@@ -17,22 +17,26 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting up FastAPI application...")
+    mongodb_service = None
     try:
         mongodb_service = MongoDBService()
         await mongodb_service.connect()
-        logger.info(" MongoDB connection established")
+        logger.info("MongoDB connection established")
+        app.state.mongodb_service = mongodb_service
     except Exception as e:
-        logger.error(f"Failed to connect to MongoDB: {e}")
-        raise
+        logger.warning(f"Failed to connect to MongoDB: {e}. Flow generation will still work with heuristic fallback.")
+        # Don't raise - allow app to continue without MongoDB
+        app.state.mongodb_service = None
     
     yield
     
     logger.info("Shutting down FastAPI application...")
-    try:
-        await mongodb_service.close()
-        logger.info("✓ MongoDB connection closed")
-    except Exception as e:
-        logger.error(f"Error closing MongoDB connection: {e}")
+    if mongodb_service:
+        try:
+            await mongodb_service.close()
+            logger.info("MongoDB connection closed")
+        except Exception as e:
+            logger.error(f"Error closing MongoDB connection: {e}")
 
 
 app = FastAPI(
