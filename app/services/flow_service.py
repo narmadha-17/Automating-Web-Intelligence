@@ -1,8 +1,7 @@
 import json
 import logging
 import re
-import urllib.parse
-from typing import Dict, Any, List
+from typing import Dict, Any
 import httpx
 from app.core.config import settings
 
