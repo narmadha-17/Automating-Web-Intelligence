@@ -1,0 +1,279 @@
+================================================================================
+    WEB INTELLIGENCE AUTOMATION - SAMPLE QUERIES
+    Tool Combinations & Examples
+================================================================================
+
+This file contains sample queries that demonstrate different combinations of 
+the available tools (Search, Crawl, Extract, Map, Ask/QA) in the dashboard.
+
+================================================================================
+1. SINGLE URL SUMMARIZATION
+================================================================================
+   Use Case: Extract key information from a specific webpage and summarize it
+   Tools Used: Extract → QA
+   
+   EXAMPLE QUERIES:
+   • https://en.wikipedia.org/wiki/Albert_Einstein summarize
+   • https://www.python.org/ tell me about this
+   • https://github.com/features/ explain what they offer
+   • https://www.nasa.gov/ provide an overview
+   • https://en.wikipedia.org/wiki/Machine_Learning describe the key concepts
+
+   EXPECTED OUTPUT: Concise summary extracted from the URL with key points
+
+
+================================================================================
+2. WEB SEARCH + SUMMARIZATION
+================================================================================
+   Use Case: Search the web for information and get an AI-generated summary
+   Tools Used: Search → QA
+   
+   EXAMPLE QUERIES:
+   • Find information about artificial intelligence and summarize
+   • Search for latest climate change research and summarize key findings
+   • Find the top renewable energy technologies
+   • Search for machine learning best practices
+   • What are the latest developments in quantum computing?
+
+   EXPECTED OUTPUT: Web search results with an AI-generated summary answer
+
+
+================================================================================
+3. WEBSITE CRAWLING + CONTENT EXTRACTION
+================================================================================
+   Use Case: Discover all pages on a website and extract relevant content
+   Tools Used: Crawl → Extract → QA
+   
+   EXAMPLE QUERIES:
+   • https://www.example.com/ crawl and extract all content
+   • Crawl https://docs.python.org/ and summarize the documentation
+   • https://www.wikipedia.org crawl the site and find key information
+   • Crawl https://github.com/tensorflow/tensorflow and extract main features
+   • https://www.medium.com crawl and list top articles
+
+   EXPECTED OUTPUT: Crawled pages connected to extracted content summary
+
+
+================================================================================
+4. WEBSITE MAP + CONTENT EXTRACTION (URL DISCOVERY)
+================================================================================
+   Use Case: Map all URLs on a website, extract their content, and summarize
+   Tools Used: Map → Extract → QA
+   
+   EXAMPLE QUERIES:
+   • https://en.wikipedia.org/wiki/Michael_Jordan list all related urls and summarize
+   • https://www.python.org/ render all urls on this site
+   • Map https://github.com and extract top pages
+   • https://www.nasa.gov/ list sitemap and extract content from key pages
+   • https://www.wikipedia.org render urls and summarize top 5 articles
+
+   EXPECTED OUTPUT: All discovered URLs with extracted content summary
+
+
+================================================================================
+5. NEWS & TRENDING CONTENT DISCOVERY
+================================================================================
+   Use Case: Search for trending topics and get comprehensive summaries
+   Tools Used: Search → Extract → QA
+   
+   EXAMPLE QUERIES:
+   • Find top 5 AI news articles and summarize
+   • Search for latest startup funding news
+   • Find trending topics in machine learning
+   • What are the top 3 cyber security threats right now?
+   • Search for latest space exploration news and summarize
+
+   EXPECTED OUTPUT: Relevant search results with structured summary
+
+
+================================================================================
+6. COMPARISON & ANALYSIS
+================================================================================
+   Use Case: Search multiple topics and extract comparative analysis
+   Tools Used: Search → Extract → QA
+   
+   EXAMPLE QUERIES:
+   • What are the differences between React and Vue?
+   • Compare cloud providers: AWS vs Azure vs Google Cloud
+   • Difference between SQL and NoSQL databases
+   • Compare different machine learning frameworks
+
+   EXPECTED OUTPUT: Comparative analysis with key differences highlighted
+
+
+================================================================================
+7. RESEARCH & DEEP LEARNING
+================================================================================
+   Use Case: Comprehensive research by combining search and extraction
+   Tools Used: Search → Crawl → Extract → QA
+   
+   EXAMPLE QUERIES:
+   • Research blockchain technology and provide detailed summary
+   • Investigate the history and impact of internet
+   • Research quantum computing and its applications
+   • Explore the evolution of artificial intelligence
+   • Investigate renewable energy sources and their efficiency
+
+   EXPECTED OUTPUT: In-depth research summary from multiple sources
+
+
+================================================================================
+8. PRODUCT/FEATURE EXTRACTION
+================================================================================
+   Use Case: Extract specific product features from websites
+   Tools Used: Extract → QA
+   
+   EXAMPLE QUERIES:
+   • https://www.github.com extract all features and list them
+   • https://www.stripe.com summarize key pricing and features
+   • https://www.figma.com what are the main features?
+   • https://www.slack.com extract all product capabilities
+   • https://www.vercel.com tell me about the platform
+
+   EXPECTED OUTPUT: Structured list of features and capabilities
+
+
+================================================================================
+9. DOCUMENTATION SEARCH
+================================================================================
+   Use Case: Find and extract specific information from documentation
+   Tools Used: Map → Extract → QA
+   
+   EXAMPLE QUERIES:
+   • https://docs.python.org/ find all pages about lists and tuples
+   • https://developer.mozilla.org/ map and extract JavaScript tutorials
+   • https://docs.react.dev/ render urls and find state management guides
+   • https://nodejs.org/docs/ extract beginner tutorials
+   • https://www.tensorflow.org/guide/ map and summarize core concepts
+
+   EXPECTED OUTPUT: Extracted documentation with organized information
+
+
+================================================================================
+10. COMPETITOR ANALYSIS
+================================================================================
+   Use Case: Analyze competitor websites and extract key information
+   Tools Used: Map → Extract → QA
+   
+   EXAMPLE QUERIES:
+   • https://www.netflix.com map and extract service details
+   • https://www.spotify.com crawl and extract features
+   • Compare features: https://www.dropbox.com vs cloud storage solutions
+   • https://www.uber.com extract all service categories
+   • https://www.airbnb.com map and summarize key offerings
+
+   EXPECTED OUTPUT: Competitive overview with extracted details
+
+
+================================================================================
+11. JOB & CAREER RESEARCH
+================================================================================
+   Use Case: Search and analyze job market information
+   Tools Used: Search → QA
+   
+   EXAMPLE QUERIES:
+   • What skills are most in-demand for data science jobs?
+   • Search for information about AI engineer salary trends
+   • What certifications are valuable for cloud architects?
+   • Find information about remote work trends
+   • Search for career growth opportunities in cybersecurity
+
+   EXPECTED OUTPUT: Career insights and trending information
+
+
+================================================================================
+12. LEGISLATIVE & POLICY RESEARCH
+================================================================================
+   Use Case: Extract and analyze policy information
+   Tools Used: Extract → QA
+   
+   EXAMPLE QUERIES:
+   • https://www.congress.gov/ extract key bills and legislation
+   • https://www.regulations.gov/ summarize recent updates
+   • Extract privacy regulations from official sources
+   • Find and summarize GDPR requirements
+   • https://www.whitehouse.gov/ extract policy information
+
+   EXPECTED OUTPUT: Policy summaries and legislative information
+
+
+================================================================================
+13. ACADEMIC RESEARCH
+================================================================================
+   Use Case: Gather and summarize academic information
+   Tools Used: Search → Extract → QA
+   
+   EXAMPLE QUERIES:
+   • Search for recent papers on deep learning and neural networks
+   • Find research on climate modeling and predictions
+   • Search for studies on remote work productivity
+   • Find academic papers on cryptocurrency security
+   • Search for latest research in quantum physics
+
+   EXPECTED OUTPUT: Academic insights and research summaries
+
+
+================================================================================
+14. CONTENT AGGREGATION
+================================================================================
+   Use Case: Aggregate content from multiple sources
+   Tools Used: Search → Map → Extract → QA
+   
+   EXAMPLE QUERIES:
+   • Aggregate latest React.js developments and best practices
+   • Find and summarize top DevOps tools and practices
+   • Aggregate information about sustainable development goals
+   • Collect insights on modern web development trends
+   • Find and summarize database performance optimization tips
+
+   EXPECTED OUTPUT: Aggregated content from multiple sources
+
+
+================================================================================
+QUERY CONSTRUCTION TIPS
+================================================================================
+
+1. USE SPECIFIC URLS:
+   • Include main URL: https://example.com
+   • Better for targeted extraction
+
+2. USE ACTION KEYWORDS:
+   • "summarize", "extract", "list", "find", "crawl", "map", "render"
+   • These trigger the correct tool combinations
+
+3. BE CLEAR ABOUT INTENT:
+   • "summarize" → Extract + Search
+   • "list all urls" → Map + Extract
+   • "find information about" → Search
+   • "compare" → Search + Extract
+
+4. COMBINE KEYWORDS FOR ROUTING:
+   • URL + "summarize" → Extract → Search
+   • URL + "list urls" → Map → Extract → Search
+   • "find" + topic → Search → Search
+   • URL + "crawl" → Crawl → Extract → Search
+
+5. EXAMPLES OF WELL-FORMED QUERIES:
+   • https://example.com summarize                         [simple]
+   • find information about artificial intelligence         [topic search]
+   • https://docs.python.org list all pages and extract     [mapping]
+   • compare machine learning frameworks                    [comparison]
+   • https://github.com/tensorflow/tensorflow explain features [extraction + qa]
+
+================================================================================
+TOOL REFERENCE
+================================================================================
+
+SEARCH:     Web search with AI-powered answer generation
+            Best for: Broad topic research, trending information
+            
+CRAWL:      Traverse website structure and extract from multiple pages
+            Best for: Multi-page analysis, site structure discovery
+            
+EXTRACT:    Pull content from specific URLs
+            Best for: Single or multiple URL content extraction
+            
+MAP:        Discover all URLs on a website
+            Best for: Site mapping, link discovery, URL inventory
+            
+================================================================================

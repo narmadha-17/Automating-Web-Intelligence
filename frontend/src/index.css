@@ -375,3 +375,107 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-primary);
 }
+
+/* --- ReactFlow Improvements --- */
+.rf-wrapper {
+  background: var(--bg-main);
+}
+
+.rf-viewport,
+.react-flow {
+  background: linear-gradient(135deg, rgba(18, 16, 14, 0.8) 0%, rgba(30, 25, 20, 0.8) 100%);
+}
+
+/* Node styling improvements */
+.react-flow__node {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+}
+
+.react-flow__node.selected {
+  box-shadow: 0 0 0 3px rgba(212, 163, 115, 0.4), 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Increased padding between nodes */
+.react-flow {
+  padding: 3rem;
+}
+
+/* Control buttons styling */
+.react-flow__controls {
+  background: rgba(44, 36, 30, 0.8);
+  border: 1px solid rgba(212, 163, 115, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.react-flow__controls button {
+  background: rgba(212, 163, 115, 0.1);
+  border: 1px solid rgba(212, 163, 115, 0.3);
+  color: #D4A373;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.react-flow__controls button:hover {
+  background: rgba(212, 163, 115, 0.2);
+  box-shadow: 0 0 12px rgba(212, 163, 115, 0.3);
+}
+
+/* Edge styling */
+.react-flow__edge-path {
+  stroke: rgba(212, 163, 115, 0.4);
+  stroke-width: 2;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: rgba(212, 163, 115, 0.8);
+  stroke-width: 2.5;
+}
+
+.react-flow__edge-label-bg {
+  fill: rgba(44, 36, 30, 0.9);
+}
+
+/* Background improvements */
+.react-flow__background {
+  background-color: var(--bg-main);
+}
+
+/* --- Enhanced Spacing --- */
+.search-wrapper {
+  min-height: 600px;
+}
+
+/* --- Dndnode Styles --- */
+.dndnode {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dndnode:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(212, 163, 115, 0.25);
+  border-color: rgba(212, 163, 115, 0.6) !important;
+  background: rgba(212, 163, 115, 0.2) !important;
+}
+
+.dndnode:active {
+  cursor: grabbing;
+  opacity: 0.7;
+  transform: scale(0.95);
+}
+
+/* --- Animate Spin --- */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}

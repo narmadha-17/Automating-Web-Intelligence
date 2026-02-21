@@ -28,5 +28,4 @@ async def correct_queries(request: BeautifyRequest) -> BeautifyResponse:
         return BeautifyResponse(corrected_queries=corrected)
     except Exception as e:
         logger.error(f"Error in beautify endpoint: {str(e)}")
-        # If correction fails, return original queries rather than failing hard
         return BeautifyResponse(corrected_queries=request.queries)
