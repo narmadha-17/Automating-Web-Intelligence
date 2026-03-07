@@ -22,6 +22,12 @@ class Settings(BaseSettings):
     TAVILY_MAX_RESULTS: int = 5
     TAVILY_SEARCH_DEPTH: str = "advanced"
     
+    # ASI-1 API Configuration (API Innovate 2026 Hackathon)
+    ASI_ONE_API_KEY: Optional[str] = None
+    ASI_ONE_API_URL: str = "https://api.asi-one.io/v1"
+    ASI_ONE_MODEL: str = "asi-one"
+    ASI_ONE_TIMEOUT: int = 60
+    
     OPENAI_API_KEY: Optional[str] = None
     
     MONGODB_URI: str

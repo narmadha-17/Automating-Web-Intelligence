@@ -5,6 +5,7 @@ import logging
 
 from app.api.routes import search, extract, crawl, map, beautify, flow
 from app.services.mongodb_service import MongoDBService
+from app.services.asi_one_service import get_asi_service
 from app.core.config import settings
 
 logging.basicConfig(
@@ -17,6 +18,8 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting up FastAPI application...")
+    logger.info("ASI-1 API Integration Active (API Innovate 2026 Hackathon)")
+    
     mongodb_service = None
     try:
         mongodb_service = MongoDBService()
@@ -25,8 +28,18 @@ async def lifespan(app: FastAPI):
         app.state.mongodb_service = mongodb_service
     except Exception as e:
         logger.warning(f"Failed to connect to MongoDB: {e}. Flow generation will still work with heuristic fallback.")
-        # Don't raise - allow app to continue without MongoDB
         app.state.mongodb_service = None
+    
+    # Initialize ASI-1 service
+    try:
+        asi_service = get_asi_service()
+        if asi_service.api_key:
+            logger.info("ASI-1 Service initialized successfully")
+            app.state.asi_service = asi_service
+        else:
+            logger.warning("ASI_ONE_API_KEY not configured. Set it in .env to enable ASI-1 features.")
+    except Exception as e:
+        logger.warning(f"ASI-1 Service initialization warning: {e}")
     
     yield
     
@@ -40,9 +53,25 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Web Intelligence API",
-    description="Automated web intelligence gathering using Tavily's AI-powered search API with MongoDB storage",
-    version="2.0.0",
+    title="Web Intelligence API with ASI-1",
+    description="""
+    Advanced web intelligence platform with ASI-1 API integration (API Innovate 2026 Hackathon).
+    
+    **Key Features:**
+    - ASI-1 powered query analysis and semantic understanding
+    - Intelligent content synthesis using ASI:One as a thinking engine
+    - AI-powered web search and extraction
+    - MongoDB storage and management
+    - Real-time data mapping and beautification
+    
+    **ASI-1 Integration:**
+    This platform uses ASI:One as a core thinking partner for:
+    - Advanced query refinement and understanding
+    - Intelligent analysis of web search results
+    - Context-aware knowledge synthesis
+    - Structured information extraction
+    """,
+    version="3.0.0-ASI",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
