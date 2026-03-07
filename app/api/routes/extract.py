@@ -5,6 +5,7 @@ import logging
 from app.api.models.extract import ExtractRequest, ExtractResponse
 from app.services.tavily_service import tavily_service
 from app.services.mongodb_service import mongodb_service
+from app.services.asi_one_service import get_asi_service
 from app.api.errors import handle_api_error
 
 logger = logging.getLogger(__name__)
@@ -14,16 +15,19 @@ router = APIRouter()
 @router.post("/",
     response_model=ExtractResponse,
     status_code=status.HTTP_200_OK,
-    summary="Extract content from URLs",
+    summary="Extract content from URLs with ASI-1 analysis",
     description="""
-    Extract precise content from specific URLs using Tavily API.
+    Extract precise content from specific URLs using Tavily API,
+    enhanced with ASI-1 intelligent analysis.
     
     - Accepts a list of up to 20 URLs
     - Returns structured extraction results for each URL
+    - ASI-1 provides intelligent content analysis and insights
     - Supports basic and advanced extraction depths
-    - Can include an AI-generated answer based on the extracted content
+    
+    **API Innovate 2026 Hackathon - ASI-1 Integration**
     """,
-    response_description="Extracted content and summary"
+    response_description="Extracted content with ASI-1 analysis"
 )
 async def extract(request: ExtractRequest) -> ExtractResponse:
     try:
@@ -42,11 +46,27 @@ async def extract(request: ExtractRequest) -> ExtractResponse:
         failed_results = extract_data.get("failed_results", [])
         
         if results:
-            logger.info(f"Successfully extracted {len(results)} items. Sample result URL: {results[0].get('url')}")
-            if extract_data.get("answer"):
-                logger.info(f"AI Answer generated: {extract_data.get('answer')[:100]}...")
-            else:
-                logger.info("No AI answer generated for this extraction.")
+            logger.info(f"Successfully extracted {len(results)} items.")
+            
+            # ASI-1 Enhancement: Analyze extracted content
+            try:
+                asi_service = get_asi_service()
+                if asi_service.api_key:
+                    # Combine content from all results for analysis
+                    combined_content = "\n\n".join([
+                        f"Source: {r.get('url', 'Unknown')}\n{r.get('content', r.get('raw_content', ''))[:500]}"
+                        for r in results[:5]
+                    ])
+                    
+                    if combined_content.strip():
+                        analysis = await asi_service.ask_question(
+                            question=request.query or "Analyze and summarize the key information from this content",
+                            context=combined_content
+                        )
+                        extract_data["asi_analysis"] = analysis.get("answer", "")
+                        logger.info("ASI-1 analysis added to extraction results")
+            except Exception as e:
+                logger.warning(f"ASI-1 analysis skipped: {e}")
         
         if failed_results:
             logger.warning(f"Failed to extract {len(failed_results)} URLs: {failed_results}")
@@ -69,7 +89,7 @@ async def extract(request: ExtractRequest) -> ExtractResponse:
         
         response = ExtractResponse(
             results=results,
-            answer=extract_data.get("answer"),
+            answer=extract_data.get("asi_analysis") or extract_data.get("answer"),
             failed_results=failed_results,
             summary={
                 "total": len(request.urls),

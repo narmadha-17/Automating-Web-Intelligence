@@ -96,7 +96,7 @@ function App() {
       </main>
 
       <footer style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-        Built with Passion & AI - Narmadha Ganesan
+        Powered by ASI-1 API · Built with Passion & AI - Narmadha Ganesan · API Innovate 2026
       </footer>
     </div>
   );

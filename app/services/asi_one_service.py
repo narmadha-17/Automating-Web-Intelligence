@@ -47,8 +47,107 @@ class ASIOneService:
             logger.warning(
                 "ASI_ONE_API_KEY not set in environment variables. "
                 "Please set it to use ASI:One integration. "
-                "Get your API key from: https://asi-one.io"
+                "Get your API key from: https://asi1.ai"
             )
+    
+    async def ask_question(
+        self,
+        question: str,
+        context: str,
+        api_key: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Use ASI:One to answer a question based on provided context.
+        
+        This powers the QA node in the Dashboard flow.
+        
+        Args:
+            question: The question to answer
+            context: Context from upstream nodes (search results, extracted content, etc.)
+            api_key: Optional override API key
+            
+        Returns:
+            Dictionary containing the answer and metadata
+        """
+        active_key = api_key or self.api_key
+        if not active_key:
+            raise ValueError(
+                "ASI:One API key is not configured. "
+                "Please set ASI_ONE_API_KEY in your .env file"
+            )
+        
+        logger.info(f"Answering question with ASI:One: '{question[:100]}'")
+        
+        # Truncate context to avoid token limits
+        max_context = 4000
+        if len(context) > max_context:
+            context = context[:max_context] + "\n\n[Content truncated for length...]"
+        
+        system_prompt = """You are an expert web intelligence analyst powered by ASI:One. 
+Your role is to provide clear, accurate, well-structured answers based on the provided context.
+Always base your answers on the given context. If the context doesn't contain enough information, say so.
+Format your response clearly with bullet points or numbered lists when appropriate."""
+        
+        user_prompt = f"""Based on the following context, answer this question:
+
+Question: {question}
+
+Context:
+{context}
+
+Provide a comprehensive, well-structured answer."""
+        
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.post(
+                    f"{self.api_url}/chat/completions",
+                    json={
+                        "model": self.model,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        "temperature": 0.5,
+                        "max_tokens": 1500
+                    },
+                    headers={
+                        "Authorization": f"Bearer {active_key}",
+                        "Content-Type": "application/json"
+                    }
+                )
+                
+                response.raise_for_status()
+                data = response.json()
+                
+                answer = data.get("choices", [{}])[0].get("message", {}).get("content", "No answer generated")
+                
+                logger.info(f"Successfully answered question with ASI:One")
+                return {
+                    "status": "success",
+                    "answer": answer,
+                    "question": question,
+                    "model": self.model,
+                    "powered_by": "ASI-1 API",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+                
+        except httpx.HTTPStatusError as e:
+            status_code = e.response.status_code
+            
+            if status_code == 401:
+                error_msg = "Invalid ASI:One API key. Please check your ASI_ONE_API_KEY in .env file"
+            elif status_code == 429:
+                error_msg = "Rate limit exceeded on ASI:One API. Please wait before making more requests"
+            else:
+                error_msg = f"ASI:One API error ({status_code}): {e.response.text}"
+            
+            logger.error(f"HTTP error answering question: {error_msg}")
+            raise ValueError(error_msg)
+            
+        except Exception as e:
+            error_msg = f"Error asking ASI:One: {str(e)}"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
     
     async def analyze_search_query(
         self,

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 
-from app.api.routes import search, extract, crawl, map, beautify, flow
+from app.api.routes import search, extract, crawl, map, beautify, flow, qa
 from app.services.mongodb_service import MongoDBService
 from app.services.asi_one_service import get_asi_service
 from app.core.config import settings
@@ -91,6 +91,7 @@ app.include_router(crawl.router, prefix="/crawl", tags=["Crawl"])
 app.include_router(map.router, prefix="/map", tags=["Map"])
 app.include_router(beautify.router, prefix="/beautify", tags=["Beautify"])
 app.include_router(flow.router, prefix="/flow", tags=["Flow"])
+app.include_router(qa.router, prefix="/qa", tags=["QA"])
 
 
 @app.get("/", tags=["Health"])

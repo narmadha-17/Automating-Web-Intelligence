@@ -219,6 +219,27 @@ const Dashboard = () => {
                     updateNodeData(node.id, { status: 'completed', result: urlList });
                     return mapData;
 
+                case 'qa':
+                    const qaQuestion = node.data.question || inputs.question || "Summarize the information";
+                    const qaContext = inputs.context || node.data.context || "No context available";
+                    
+                    const qaPayload = {
+                        question: qaQuestion,
+                        context: typeof qaContext === 'string' ? qaContext : JSON.stringify(qaContext)
+                    };
+                    
+                    const qaRes = await fetch(`${API_BASE_URL}/qa/ask`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(qaPayload)
+                    });
+                    if (!qaRes.ok) throw new Error(await qaRes.text());
+                    const qaData = await qaRes.json();
+                    
+                    const qaAnswer = qaData.answer || "No answer generated";
+                    updateNodeData(node.id, { status: 'completed', result: qaAnswer });
+                    return qaData;
+
                 default:
                     const unknownMsg = "Unknown node type";
                     updateNodeData(node.id, { status: 'completed', result: unknownMsg });
