@@ -22,13 +22,11 @@ class Settings(BaseSettings):
     TAVILY_MAX_RESULTS: int = 5
     TAVILY_SEARCH_DEPTH: str = "advanced"
     
-    # ASI-1 API Configuration (API Innovate 2026 Hackathon)
-    ASI_ONE_API_KEY: Optional[str] = None
-    ASI_ONE_API_URL: str = "https://api.asi1.ai/v1"
-    ASI_ONE_MODEL: str = "asi1-mini"
-    ASI_ONE_TIMEOUT: int = 60
-    
+    # OpenAI API Configuration
     OPENAI_API_KEY: Optional[str] = None
+    OPENAI_API_URL: str = "https://api.openai.com/v1"
+    OPENAI_MODEL: str = "gpt-4o-mini"
+    OPENAI_TIMEOUT: int = 60
     
     MONGODB_URI: str
     MONGODB_DB_NAME: str = "web_intelligence"

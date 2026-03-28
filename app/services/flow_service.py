@@ -9,12 +9,12 @@ logger = logging.getLogger(__name__)
 
 class FlowGenerationService:
     def __init__(self):
-        # Use ASI-1 API instead of OpenAI (mandatory for hackathon)
-        self.api_key = settings.ASI_ONE_API_KEY
-        self.api_url = settings.ASI_ONE_API_URL
-        self.model = settings.ASI_ONE_MODEL
+        # Use OpenAI API for flow generation
+        self.api_key = settings.OPENAI_API_KEY
+        self.api_url = settings.OPENAI_API_URL
+        self.model = settings.OPENAI_MODEL
         masked_key = f"{self.api_key[:10]}...{self.api_key[-5:]}" if self.api_key else "None"
-        logger.info(f"FlowGenerationService initialized with ASI-1 key: {masked_key}")
+        logger.info(f"FlowGenerationService initialized with OpenAI key: {masked_key}")
 
     async def generate_flow(self, prompt: str) -> Dict[str, Any]:
         logger.info(f"Generating flow for prompt: {prompt}")
@@ -46,8 +46,8 @@ JSON Structure (return ONLY this, no explanation):
 }
 """
 
-            # Try ASI-1 First (mandatory for hackathon)
-            if self.api_key and self.api_key != "None" and self.api_key != "your-asi1-api-key-here":
+            # Try OpenAI first
+            if self.api_key and self.api_key != "None" and self.api_key != "your-openai-api-key-here":
                 try:
                     payload = {
                         "model": self.model,
@@ -77,23 +77,23 @@ JSON Structure (return ONLY this, no explanation):
                             if json_match:
                                 result = json.loads(json_match.group())
                                 if "nodes" in result and "edges" in result:
-                                    logger.info("Flow generated successfully via ASI-1 API")
+                                    logger.info("Flow generated successfully via OpenAI API")
                                     return result
                             # If direct parse works
                             try:
                                 result = json.loads(content)
                                 if "nodes" in result and "edges" in result:
-                                    logger.info("Flow generated successfully via ASI-1 API")
+                                    logger.info("Flow generated successfully via OpenAI API")
                                     return result
                             except json.JSONDecodeError:
                                 pass
-                            logger.warning("ASI-1 response didn't contain valid flow JSON, falling back")
+                            logger.warning("OpenAI response didn't contain valid flow JSON, falling back")
                         else:
-                            logger.warning(f"ASI-1 failed ({response.status_code}), falling back to heuristic")
+                            logger.warning(f"OpenAI failed ({response.status_code}), falling back to heuristic")
                 except Exception as e:
-                    logger.warning(f"ASI-1 error: {str(e)}, falling back to heuristic")
+                    logger.warning(f"OpenAI error: {str(e)}, falling back to heuristic")
             else:
-                logger.warning("ASI-1 API key not configured, using heuristic fallback")
+                logger.warning("OpenAI API key not configured, using heuristic fallback")
 
             # Fallback to Tavily AI Answer - only if API key is available
             if settings.TAVILY_API_KEY and settings.TAVILY_API_KEY != "None":

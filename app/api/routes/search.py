@@ -11,11 +11,11 @@ from app.api.models.search import (
 )
 from app.services.tavily_service import tavily_service
 from app.services.mongodb_service import mongodb_service
-from app.services.asi_one_service import get_asi_service
+from app.services.openai_service import get_openai_service
 from app.api.errors import handle_api_error
 
 logger = logging.getLogger(__name__)
-asi_service = get_asi_service()
+openai_service = get_openai_service()
 
 router = APIRouter()
 
@@ -123,41 +123,34 @@ async def get_stats() -> Dict[str, Any]:
             detail=f"Failed to retrieve statistics: {str(e)}"
         )
 
-@router.post("/search-with-asi",
+
+@router.post("/search-with-ai",
     status_code=status.HTTP_200_OK,
-    summary="Advanced search with ASI-1 analysis",
+    summary="Advanced search with OpenAI analysis",
     description="""
-    Perform web search with ASI-1 AI analysis.
+    Perform web search with OpenAI analysis.
     
-    This endpoint leverages ASI:One as a genuine thinking partner to:
+    This endpoint leverages OpenAI as a thinking partner to:
     - Analyze and refine search queries for better results
     - Synthesize information from multiple sources
     - Provide intelligent insights and recommendations
-    
-    **API Innovate 2026 Hackathon Integration**
-    
-    This is a core feature demonstrating genuine ASI-1 API usage
-    for advanced web intelligence gathering.
     """,
-    response_description="Search results enhanced with ASI-1 analysis"
+    response_description="Search results enhanced with OpenAI analysis"
 )
-async def search_with_asi(request: SearchRequest) -> Dict[str, Any]:
+async def search_with_ai(request: SearchRequest) -> Dict[str, Any]:
     """
-    Advanced search endpoint integrating ASI-1 for enhanced intelligence.
-    
-    Uses ASI:One to understand search intent deeply and provide
-    intelligent synthesis of results.
+    Advanced search endpoint integrating OpenAI for enhanced intelligence.
     """
     try:
-        logger.info(f"Received ASI-enhanced search request with {len(request.queries)} queries")
+        logger.info(f"Received OpenAI-enhanced search request with {len(request.queries)} queries")
         
         results_by_query = {}
         
         for query in request.queries:
             try:
-                # Step 1: Use ASI-1 to analyze and enhance the query
-                logger.info(f"Analyzing query with ASI-1: '{query}'")
-                query_analysis = await asi_service.analyze_search_query(
+                # Step 1: Use OpenAI to analyze and enhance the query
+                logger.info(f"Analyzing query with OpenAI: '{query}'")
+                query_analysis = await openai_service.analyze_search_query(
                     query=query,
                     api_key=request.api_key
                 )
@@ -174,10 +167,10 @@ async def search_with_asi(request: SearchRequest) -> Dict[str, Any]:
                     api_key=request.api_key
                 )
                 
-                # Step 3: Use ASI-1 to synthesize results
+                # Step 3: Use OpenAI to synthesize results
                 if search_data.get("results"):
-                    logger.info(f"Synthesizing {len(search_data['results'])} results with ASI-1")
-                    synthesis = await asi_service.synthesize_web_content(
+                    logger.info(f"Synthesizing {len(search_data['results'])} results with OpenAI")
+                    synthesis = await openai_service.synthesize_web_content(
                         search_results=search_data["results"],
                         query=query,
                         api_key=request.api_key
@@ -193,7 +186,7 @@ async def search_with_asi(request: SearchRequest) -> Dict[str, Any]:
                     "query_analysis": query_analysis,
                     "search_results": search_data.get("results", []),
                     "answer": search_data.get("answer", ""),
-                    "asi_synthesis": synthesis,
+                    "ai_synthesis": synthesis,
                     "status": "success"
                 }
                 
@@ -216,34 +209,34 @@ async def search_with_asi(request: SearchRequest) -> Dict[str, Any]:
             "status": "success",
             "queries_processed": len(request.queries),
             "results": results_by_query,
-            "note": "Results analyzed with ASI-1 API (API Innovate 2026 Hackathon)",
+            "note": "Results analyzed with OpenAI API",
             "timestamp": logger.name
         }
         
     except Exception as e:
-        logger.error(f"Error in ASI-enhanced search: {str(e)}")
+        logger.error(f"Error in OpenAI-enhanced search: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Search with ASI analysis failed: {str(e)}"
+            detail=f"Search with OpenAI analysis failed: {str(e)}"
         )
 
 
-@router.post("/analyze-asi",
+@router.post("/analyze-ai",
     status_code=status.HTTP_200_OK,
-    summary="Analyze content with ASI-1",
+    summary="Analyze content with OpenAI",
     description="""
-    Use ASI-1 to analyze and extract intelligence from web content.
+    Use OpenAI to analyze and extract intelligence from web content.
     
-    Demonstrates ASI:One's capability as a thinking engine for
+    Demonstrates OpenAI's capability as a thinking engine for
     intelligent content analysis and extraction.
     """
 )
-async def analyze_with_asi(url: str, query: str = None) -> Dict[str, Any]:
-    """Analyze a URL using ASI-1 as the analysis engine."""
+async def analyze_with_ai(url: str, query: str = None) -> Dict[str, Any]:
+    """Analyze a URL using OpenAI as the analysis engine."""
     try:
-        logger.info(f"Analyzing {url} with ASI-1")
+        logger.info(f"Analyzing {url} with OpenAI")
         
-        analysis = await asi_service.extract_and_analyze(
+        analysis = await openai_service.extract_and_analyze(
             url=url,
             query=query
         )
@@ -251,12 +244,12 @@ async def analyze_with_asi(url: str, query: str = None) -> Dict[str, Any]:
         return {
             "status": "success",
             "analysis": analysis,
-            "powered_by": "ASI-1 API"
+            "powered_by": "OpenAI API"
         }
         
     except Exception as e:
-        logger.error(f"Error analyzing with ASI: {str(e)}")
+        logger.error(f"Error analyzing with OpenAI: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"ASI analysis failed: {str(e)}"
+            detail=f"OpenAI analysis failed: {str(e)}"
         )
