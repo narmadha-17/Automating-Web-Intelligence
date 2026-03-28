@@ -40,6 +40,10 @@ async def lifespan(app: FastAPI):
             logger.warning("ASI_ONE_API_KEY not configured. Set it in .env to enable ASI-1 features.")
     except Exception as e:
         logger.warning(f"ASI-1 Service initialization warning: {e}")
+    except Exception as e:
+        logger.warning(f"Failed to connect to MongoDB: {e}. Flow generation will still work with heuristic fallback.")
+        # Don't raise - allow app to continue without MongoDB
+        app.state.mongodb_service = None
     
     yield
     
