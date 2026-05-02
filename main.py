@@ -5,7 +5,6 @@ import logging
 
 from app.api.routes import search, extract, crawl, map, beautify, flow, qa
 from app.services.mongodb_service import MongoDBService
-from app.services.asi_one_service import get_asi_service
 from app.core.config import settings
 
 logging.basicConfig(
@@ -18,8 +17,8 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting up FastAPI application...")
-    logger.info("ASI-1 API Integration Active (API Innovate 2026 Hackathon)")
-    
+    logger.info("OpenAI API Integration Active")
+
     mongodb_service = None
     try:
         mongodb_service = MongoDBService()
@@ -29,24 +28,9 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Failed to connect to MongoDB: {e}. Flow generation will still work with heuristic fallback.")
         app.state.mongodb_service = None
-    
-    # Initialize ASI-1 service
-    try:
-        asi_service = get_asi_service()
-        if asi_service.api_key:
-            logger.info("ASI-1 Service initialized successfully")
-            app.state.asi_service = asi_service
-        else:
-            logger.warning("ASI_ONE_API_KEY not configured. Set it in .env to enable ASI-1 features.")
-    except Exception as e:
-        logger.warning(f"ASI-1 Service initialization warning: {e}")
-    except Exception as e:
-        logger.warning(f"Failed to connect to MongoDB: {e}. Flow generation will still work with heuristic fallback.")
-        # Don't raise - allow app to continue without MongoDB
-        app.state.mongodb_service = None
-    
+
     yield
-    
+
     logger.info("Shutting down FastAPI application...")
     if mongodb_service:
         try:
@@ -57,25 +41,18 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Web Intelligence API with ASI-1",
+    title="Web Intelligence API",
     description="""
-    Advanced web intelligence platform with ASI-1 API integration (API Innovate 2026 Hackathon).
-    
+    Advanced web intelligence platform powered by OpenAI.
+
     **Key Features:**
-    - ASI-1 powered query analysis and semantic understanding
-    - Intelligent content synthesis using ASI:One as a thinking engine
+    - OpenAI powered query analysis and semantic understanding
+    - Intelligent content synthesis
     - AI-powered web search and extraction
     - MongoDB storage and management
     - Real-time data mapping and beautification
-    
-    **ASI-1 Integration:**
-    This platform uses ASI:One as a core thinking partner for:
-    - Advanced query refinement and understanding
-    - Intelligent analysis of web search results
-    - Context-aware knowledge synthesis
-    - Structured information extraction
     """,
-    version="3.0.0-ASI",
+    version="3.0.0",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
@@ -102,7 +79,7 @@ app.include_router(qa.router, prefix="/qa", tags=["QA"])
 async def root():
     return {
         "message": "Web Intelligence API",
-        "version": "2.0.0",
+        "version": "3.0.0",
         "status": "healthy",
         "docs": "/docs"
     }
@@ -113,7 +90,7 @@ async def health_check():
     return {
         "status": "healthy",
         "service": "Web Intelligence API",
-        "version": "2.0.0"
+        "version": "3.0.0"
     }
 
 

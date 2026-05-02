@@ -18,6 +18,7 @@ import logging
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 import json
+import asyncio
 
 from app.core.config import settings
 
@@ -52,17 +53,20 @@ class OpenAIService:
         self,
         question: str,
         context: str,
-        api_key: Optional[str] = None
+        api_key: Optional[str] = None,
+        max_retries: int = 3
     ) -> Dict[str, Any]:
         """
         Use OpenAI to answer a question based on provided context.
 
         This powers the QA node in the Dashboard flow.
+        Includes retry logic with exponential backoff for rate limits.
 
         Args:
             question: The question to answer
             context: Context from upstream nodes (search results, extracted content, etc.)
             api_key: Optional override API key
+            max_retries: Number of retries for rate-limited requests (default: 3)
 
         Returns:
             Dictionary containing the answer and metadata
@@ -95,57 +99,117 @@ Context:
 
 Provide a comprehensive, well-structured answer."""
 
-        try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                response = await client.post(
-                    f"{self.api_url}/chat/completions",
-                    json={
+        # Retry logic with exponential backoff
+        for attempt in range(max_retries):
+            try:
+                async with httpx.AsyncClient(timeout=self.timeout) as client:
+                    response = await client.post(
+                        f"{self.api_url}/chat/completions",
+                        json={
+                            "model": self.model,
+                            "messages": [
+                                {"role": "system", "content": system_prompt},
+                                {"role": "user", "content": user_prompt}
+                            ],
+                            "temperature": 0.5,
+                            "max_tokens": 1500
+                        },
+                        headers={
+                            "Authorization": f"Bearer {active_key}",
+                            "Content-Type": "application/json"
+                        }
+                    )
+
+                    response.raise_for_status()
+                    data = response.json()
+
+                    answer = data.get("choices", [{}])[0].get("message", {}).get("content", "No answer generated")
+
+                    logger.info("Successfully answered question with OpenAI")
+                    return {
+                        "status": "success",
+                        "answer": answer,
+                        "question": question,
                         "model": self.model,
-                        "messages": [
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": user_prompt}
-                        ],
-                        "temperature": 0.5,
-                        "max_tokens": 1500
-                    },
-                    headers={
-                        "Authorization": f"Bearer {active_key}",
-                        "Content-Type": "application/json"
+                        "powered_by": "OpenAI API",
+                        "timestamp": datetime.utcnow().isoformat()
                     }
-                )
 
-                response.raise_for_status()
-                data = response.json()
+            except httpx.HTTPStatusError as e:
+                status_code = e.response.status_code
 
-                answer = data.get("choices", [{}])[0].get("message", {}).get("content", "No answer generated")
+                if status_code == 429:  # Rate limit
+                    if attempt < max_retries - 1:
+                        # Exponential backoff: 2^attempt seconds (1s, 2s, 4s)
+                        wait_time = 2 ** attempt
+                        logger.warning(
+                            f"Rate limit (429) on attempt {attempt + 1}/{max_retries}. "
+                            f"Waiting {wait_time}s before retry..."
+                        )
+                        await asyncio.sleep(wait_time)
+                        continue
+                    else:
+                        # Exhausted retries, use fallback
+                        logger.warning(
+                            f"Rate limit persisted after {max_retries} retries. "
+                            "Using fallback answer."
+                        )
+                        return self._fallback_answer(question, context)
 
-                logger.info("Successfully answered question with OpenAI")
-                return {
-                    "status": "success",
-                    "answer": answer,
-                    "question": question,
-                    "model": self.model,
-                    "powered_by": "OpenAI API",
-                    "timestamp": datetime.utcnow().isoformat()
-                }
+                elif status_code == 401:
+                    error_msg = "Invalid OpenAI API key. Please check your OPENAI_API_KEY in .env file"
+                else:
+                    error_msg = f"OpenAI API error ({status_code}): {e.response.text}"
 
-        except httpx.HTTPStatusError as e:
-            status_code = e.response.status_code
+                logger.error(f"HTTP error answering question: {error_msg}")
+                raise ValueError(error_msg)
 
-            if status_code == 401:
-                error_msg = "Invalid OpenAI API key. Please check your OPENAI_API_KEY in .env file"
-            elif status_code == 429:
-                error_msg = "Rate limit exceeded on OpenAI API. Please wait before making more requests"
-            else:
-                error_msg = f"OpenAI API error ({status_code}): {e.response.text}"
+            except Exception as e:
+                error_msg = f"Error asking OpenAI: {str(e)}"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
 
-            logger.error(f"HTTP error answering question: {error_msg}")
-            raise ValueError(error_msg)
+        # Fallback if all retries exhausted
+        return self._fallback_answer(question, context)
 
-        except Exception as e:
-            error_msg = f"Error asking OpenAI: {str(e)}"
-            logger.error(error_msg)
-            raise ValueError(error_msg)
+    def _fallback_answer(
+        self,
+        question: str,
+        context: str
+    ) -> Dict[str, Any]:
+        """
+        Generate a fallback answer when OpenAI is unavailable.
+        Extracts key points from context and provides a simple summary.
+
+        Args:
+            question: The original question
+            context: The provided context
+
+        Returns:
+            Dictionary with a fallback answer
+        """
+        logger.info("Using fallback answer generation (no OpenAI)")
+
+        # Simple fallback: extract first few sentences from context
+        sentences = context.split('. ')
+        summary = '. '.join(sentences[:3]) if len(sentences) > 0 else context[:500]
+
+        if not summary.endswith('.'):
+            summary += '.'
+
+        fallback_answer = (
+            f"Based on the available information:\n\n{summary}\n\n"
+            f"[Note: This is a fallback answer due to OpenAI API rate limits. "
+            f"For a more detailed analysis, please try again in a moment.]"
+        )
+
+        return {
+            "status": "success_fallback",
+            "answer": fallback_answer,
+            "question": question,
+            "powered_by": "Fallback (OpenAI unavailable)",
+            "timestamp": datetime.utcnow().isoformat()
+        }
 
     async def analyze_search_query(
         self,

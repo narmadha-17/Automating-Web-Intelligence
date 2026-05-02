@@ -176,7 +176,7 @@ export const SearchNode = memo(({ data, selected }) => {
                         className="nodrag"
                         style={isFocused ? inputStyle_focus : inputStyle}
                         placeholder="Enter your search query..."
-                        defaultValue={data.query}
+                        value={data.query || ''}
                         onChange={(evt) => data.onChange(evt.target.value)}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
@@ -218,7 +218,7 @@ export const CrawlNode = memo(({ data, selected }) => {
                         className="nodrag"
                         style={isFocused ? inputStyle_focus : inputStyle}
                         placeholder="https://example.com"
-                        defaultValue={data.url}
+                        value={data.url || ''}
                         onChange={(evt) => data.onUrlChange(evt.target.value)}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
@@ -260,7 +260,7 @@ export const ExtractNode = memo(({ data, selected }) => {
                         className="nodrag"
                         style={isFocused ? inputStyle_focus : inputStyle}
                         placeholder="https://example.com"
-                        defaultValue={data.url}
+                        value={data.url || ''}
                         onChange={(evt) => data.onUrlChange(evt.target.value)}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
@@ -302,7 +302,7 @@ export const MapNode = memo(({ data, selected }) => {
                         className="nodrag"
                         style={isFocused ? inputStyle_focus : inputStyle}
                         placeholder="https://example.com"
-                        defaultValue={data.url}
+                        value={data.url || ''}
                         onChange={(evt) => data.onUrlChange(evt.target.value)}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
@@ -344,7 +344,7 @@ export const QANode = memo(({ data, selected }) => {
                         className="nodrag"
                         style={isFocused ? inputStyle_focus : inputStyle}
                         placeholder="Ask a question..."
-                        defaultValue={data.question}
+                        value={data.question || ''}
                         onChange={(evt) => data.onQuestionChange(evt.target.value)}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}

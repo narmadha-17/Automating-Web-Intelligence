@@ -7,6 +7,7 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+
 class FlowGenerationService:
     def __init__(self):
         # Use OpenAI API for flow generation
@@ -18,7 +19,7 @@ class FlowGenerationService:
 
     async def generate_flow(self, prompt: str) -> Dict[str, Any]:
         logger.info(f"Generating flow for prompt: {prompt}")
-        
+
         try:
             system_prompt = """
 You are an expert at designing data flows for a web intelligence platform.
@@ -31,12 +32,12 @@ Tool nodes:
 
 IMPORTANT RULES:
 - When the prompt contains a URL AND words like 'render urls', 'list urls', 'map site', 'summarize top N':
-  Use: map → extract → qa chain.
+  Use: map -> extract -> qa chain.
   The map node finds all URLs, extract gets content from them, qa summarizes.
 - When the prompt is about searching/finding info on a topic without a specific URL:
   Use: search node, optionally followed by qa.
 - When the prompt mentions crawling a specific site:
-  Use: crawl → qa chain.
+  Use: crawl -> qa chain.
 - Nodes are positioned at x: 100, 400, 700, 1000 and y: 150 for a horizontal flow.
 
 JSON Structure (return ONLY this, no explanation):
@@ -46,24 +47,17 @@ JSON Structure (return ONLY this, no explanation):
 }
 """
 
-            # Try OpenAI first
-            if self.api_key and self.api_key != "None" and self.api_key != "your-openai-api-key-here":
+            # Try OpenAI first - only if API key is available
+            if self.api_key and self.api_key not in ("None", "your-openai-api-key-here"):
                 try:
                     payload = {
                         "model": self.model,
-            # Try OpenAI First - only if API key is available
-            if self.api_key and self.api_key != "None":
-                try:
-                    payload = {
-                        "model": "gpt-4o-mini",
                         "messages": [
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": f"Generate a flow for: {prompt}"}
                         ],
                         "temperature": 0.7,
-                        "max_tokens": 1000
-                    }
-                    async with httpx.AsyncClient(timeout=30.0) as client:
+                        "max_tokens": 1000,
                         "response_format": {"type": "json_object"}
                     }
                     async with httpx.AsyncClient(timeout=20.0) as client:
@@ -76,19 +70,12 @@ JSON Structure (return ONLY this, no explanation):
                             json=payload,
                             headers=headers
                         )
-                        response = await client.post(self.openai_url, json=payload, headers=headers)
-                        
+
                         if response.status_code == 200:
                             data = response.json()
                             content = data["choices"][0]["message"]["content"]
-                            # Try to extract JSON from the response
-                            json_match = re.search(r'\{[\s\S]*\}', content)
-                            if json_match:
-                                result = json.loads(json_match.group())
-                                if "nodes" in result and "edges" in result:
-                                    logger.info("Flow generated successfully via OpenAI API")
-                                    return result
-                            # If direct parse works
+
+                            # Try direct JSON parse first (response_format ensures JSON)
                             try:
                                 result = json.loads(content)
                                 if "nodes" in result and "edges" in result:
@@ -96,6 +83,15 @@ JSON Structure (return ONLY this, no explanation):
                                     return result
                             except json.JSONDecodeError:
                                 pass
+
+                            # Fallback: extract JSON substring
+                            json_match = re.search(r'\{[\s\S]*\}', content)
+                            if json_match:
+                                result = json.loads(json_match.group())
+                                if "nodes" in result and "edges" in result:
+                                    logger.info("Flow generated successfully via OpenAI API (regex)")
+                                    return result
+
                             logger.warning("OpenAI response didn't contain valid flow JSON, falling back")
                         else:
                             logger.warning(f"OpenAI failed ({response.status_code}), falling back to heuristic")
@@ -107,8 +103,10 @@ JSON Structure (return ONLY this, no explanation):
             # Fallback to Tavily AI Answer - only if API key is available
             if settings.TAVILY_API_KEY and settings.TAVILY_API_KEY != "None":
                 try:
-                    # Slim down the prompt for Tavily to avoid 400 errors
-                    slim_prompt = f"Convert this request into a JSON flow (search, crawl, extract, map, qa nodes): {prompt}. Return only JSON."
+                    slim_prompt = (
+                        f"Convert this request into a JSON flow (search, crawl, extract, map, qa nodes): "
+                        f"{prompt}. Return only JSON."
+                    )
                     payload = {
                         "api_key": settings.TAVILY_API_KEY,
                         "query": slim_prompt,
@@ -122,16 +120,19 @@ JSON Structure (return ONLY this, no explanation):
                             answer = data.get("answer", "")
                             json_match = re.search(r'\{.*\}', answer, re.DOTALL)
                             if json_match:
-                                logger.info("Flow generated successfully via Tavily")
-                                return json.loads(json_match.group())
+                                result = json.loads(json_match.group())
+                                if "nodes" in result and "edges" in result:
+                                    logger.info("Flow generated successfully via Tavily")
+                                    return result
                 except Exception as e:
                     logger.warning(f"Tavily fallback error: {str(e)}")
             else:
                 logger.warning("Tavily API key not configured, using heuristic fallback")
+
         except Exception as e:
             logger.error(f"Unexpected error in generate_flow: {str(e)}")
-            
-        # Final Heuristic Fallback for common requests - always succeeds
+
+        # Final Heuristic Fallback - always succeeds
         logger.info("Using heuristic fallback for flow generation")
         return self._heuristic_fallback(prompt)
 
@@ -152,23 +153,16 @@ JSON Structure (return ONLY this, no explanation):
         # Pattern 0: URL present + render/list/map URLs + summarize → Map → Extract → QA
         url_related = any(kw in p for kw in ['render', 'list url', 'all url', 'urls', 'sitemap', 'map site', 'site map'])
         summarize_related = any(kw in p for kw in ['summarize', 'summary', 'news', 'top', 'bullet', 'brief', 'overview'])
-        
+
         if detected_url and (url_related or summarize_related):
             num_match = re.search(r'(\d+)\s*(top|latest|recent|urls?|results?|news)', p)
             num = int(num_match.group(1)) if num_match else 5
 
-            # Determine how many results
-            num_match = re.search(r'(\d+)\s*(top|latest|recent|urls?|results?|news)', p)
-            num = int(num_match.group(1)) if num_match else 5
-
-            # Map node
             nodes.append({
                 "id": "map_1", "type": "map",
                 "position": {"x": 100, "y": 150},
                 "data": {"url": detected_url, "label": f"Map {detected_url}"}
             })
-
-            # Extract node (will receive top URLs from Map)
             nodes.append({
                 "id": "extract_1", "type": "extract",
                 "position": {"x": 450, "y": 150},
@@ -176,13 +170,21 @@ JSON Structure (return ONLY this, no explanation):
             })
             edges.append({"id": "e_m_e", "source": "map_1", "target": "extract_1"})
 
-            # QA/Summarize node
             if 'news' in p:
-                question = f"Summarize the top {num} AI news articles in {num} bullet points. For each, include the title and key takeaway."
+                question = (
+                    f"Summarize the top {num} AI news articles in {num} bullet points. "
+                    "For each, include the title and key takeaway."
+                )
             elif summarize_related:
-                question = f"Based on the extracted content, provide a concise summary of the top {num} items in {num} bullet points."
+                question = (
+                    f"Based on the extracted content, provide a concise summary of the "
+                    f"top {num} items in {num} bullet points."
+                )
             else:
-                question = f"Based on the content from {detected_url}, list the top {num} items with a brief description each."
+                question = (
+                    f"Based on the content from {detected_url}, list the top {num} items "
+                    "with a brief description each."
+                )
 
             nodes.append({
                 "id": "qa_1", "type": "qa",
@@ -190,71 +192,103 @@ JSON Structure (return ONLY this, no explanation):
                 "data": {"question": question}
             })
             edges.append({"id": "e_e_q", "source": "extract_1", "target": "qa_1"})
-
             return {"nodes": nodes, "edges": edges}
 
-        # Pattern 1: Search -> (Crawl/Extract) -> QA
-        # This includes: search, find, research, compare, analyze, investigate, etc.
-        search_keywords = ['search', 'find', 'research', 'compare', 'analyze', 'investigate', 'what', 'how', 'why', 'explain', 'tell', 'describe']
+        # Pattern 1: Search → (Crawl/Extract) → QA
+        search_keywords = [
+            'search', 'find', 'research', 'compare', 'analyze', 'investigate',
+            'what', 'how', 'why', 'explain', 'tell', 'describe', 'latest', 'news'
+        ]
         is_search_query = any(kw in p for kw in search_keywords)
-        
+
         if is_search_query:
-            nodes.append({"id": "search_1", "type": "search", "position": {"x": 100, "y": 150}, "data": {"query": prompt}})
+            nodes.append({
+                "id": "search_1", "type": "search",
+                "position": {"x": 100, "y": 150},
+                "data": {"query": prompt}
+            })
             last_node = "search_1"
 
             if "crawl" in p:
-                nodes.append({"id": "crawl_1", "type": "crawl", "position": {"x": 450, "y": 150}, "data": {"label": "crawl"}})
+                nodes.append({
+                    "id": "crawl_1", "type": "crawl",
+                    "position": {"x": 450, "y": 150},
+                    "data": {"label": "Crawl"}
+                })
                 edges.append({"id": "e_s_c", "source": "search_1", "target": "crawl_1"})
                 last_node = "crawl_1"
             elif "extract" in p:
-                nodes.append({"id": "extract_1", "type": "extract", "position": {"x": 450, "y": 150}, "data": {"label": "extract"}})
+                nodes.append({
+                    "id": "extract_1", "type": "extract",
+                    "position": {"x": 450, "y": 150},
+                    "data": {"label": "Extract"}
+                })
                 edges.append({"id": "e_s_e", "source": "search_1", "target": "extract_1"})
                 last_node = "extract_1"
 
-            qa_keywords = ['qa', 'ask', 'find the best', 'summarize', 'compare', 'analyze', 'explain', 'describe', 'tell', 'what']
+            qa_keywords = [
+                'qa', 'ask', 'find the best', 'summarize', 'compare',
+                'analyze', 'explain', 'describe', 'tell', 'what', 'news'
+            ]
             needs_qa = any(kw in p for kw in qa_keywords)
-            
+
             if needs_qa or len(prompt) > 10:
-            # Add QA node if asked or by default for search queries with certain indicators
-            qa_keywords = ['qa', 'ask', 'find the best', 'summarize', 'compare', 'analyze', 'explain', 'describe', 'tell', 'what']
-            needs_qa = any(kw in p for kw in qa_keywords)
-            
-            if needs_qa or len(prompt) > 10:  # Default to QA for meaningful queries
-                nodes.append({"id": "qa_1", "type": "qa", "position": {"x": 800, "y": 150}, "data": {"question": "Based on the results, provide a concise summary with key insights."}})
+                nodes.append({
+                    "id": "qa_1", "type": "qa",
+                    "position": {"x": 800, "y": 150},
+                    "data": {"question": "Based on the results, provide a concise summary with key insights."}
+                })
                 edges.append({"id": "e_last_qa", "source": last_node, "target": "qa_1"})
 
             return {"nodes": nodes, "edges": edges}
 
-        # Pattern 2: Multi-step Extract/Crawl (if no search)
+        # Pattern 2: Crawl/Extract without search
         if "crawl" in p or "extract" in p:
             if "crawl" in p:
                 url = detected_url or ""
-                nodes.append({"id": "crawl_1", "type": "crawl", "position": {"x": 100, "y": 150}, "data": {"url": url, "label": "crawl"}})
+                nodes.append({
+                    "id": "crawl_1", "type": "crawl",
+                    "position": {"x": 100, "y": 150},
+                    "data": {"url": url, "label": "Crawl"}
+                })
                 last_node = "crawl_1"
             if "extract" in p:
                 url = detected_url or ""
-                nodes.append({"id": "extract_1", "type": "extract", "position": {"x": 450, "y": 150}, "data": {"url": url, "label": "extract"}})
+                nodes.append({
+                    "id": "extract_1", "type": "extract",
+                    "position": {"x": 450, "y": 150},
+                    "data": {"url": url, "label": "Extract"}
+                })
                 if last_node:
                     edges.append({"id": "e_c_e", "source": last_node, "target": "extract_1"})
                 last_node = "extract_1"
-            
-            # Add QA if requested
+
             qa_keywords = ['summarize', 'analyze', 'qa', 'ask', 'explain', 'describe']
             if any(kw in p for kw in qa_keywords):
-                nodes.append({"id": "qa_1", "type": "qa", "position": {"x": 800, "y": 150}, "data": {"question": "Based on the extracted content, provide a summary and key insights."}})
+                nodes.append({
+                    "id": "qa_1", "type": "qa",
+                    "position": {"x": 800, "y": 150},
+                    "data": {"question": "Based on the extracted content, provide a summary and key insights."}
+                })
                 if last_node:
                     edges.append({"id": "e_last_qa", "source": last_node, "target": "qa_1"})
 
             return {"nodes": nodes, "edges": edges}
 
-        # Final fallback: default search node for any query
-        if not nodes:
-            nodes.append({"id": "search_1", "type": "search", "position": {"x": 100, "y": 150}, "data": {"query": prompt}})
-            
-            # Add QA for better results
-            nodes.append({"id": "qa_1", "type": "qa", "position": {"x": 450, "y": 150}, "data": {"question": "Based on the search results, provide a helpful answer to the user's question."}})
-            edges.append({"id": "e_s_q", "source": "search_1", "target": "qa_1"})
+        # Final fallback: default search + QA
+        nodes.append({
+            "id": "search_1", "type": "search",
+            "position": {"x": 100, "y": 150},
+            "data": {"query": prompt}
+        })
+        nodes.append({
+            "id": "qa_1", "type": "qa",
+            "position": {"x": 450, "y": 150},
+            "data": {"question": "Based on the search results, provide a helpful answer to the user's question."}
+        })
+        edges.append({"id": "e_s_q", "source": "search_1", "target": "qa_1"})
 
         return {"nodes": nodes, "edges": edges}
+
 
 flow_generation_service = FlowGenerationService()

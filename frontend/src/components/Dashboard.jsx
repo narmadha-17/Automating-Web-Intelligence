@@ -29,7 +29,7 @@ const initialEdges = [];
 let id = 0;
 const getId = () => `dndnode_${id++}`;
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
 const Dashboard = () => {
     const reactFlowWrapper = useRef(null);
@@ -303,7 +303,10 @@ const Dashboard = () => {
             // Don't clear the prompt - keep it for display
         } catch (error) {
             console.error("Flow generation error:", error);
-            alert("Failed to generate flow: " + error.message);
+            const suggestion = error.message && error.message.includes('Failed to fetch')
+                ? " — ensure the backend API is running at " + API_BASE_URL + " and CORS is configured."
+                : "";
+            alert("Failed to generate flow: " + error.message + suggestion);
         } finally {
             setIsGenerating(false);
         }
@@ -366,7 +369,10 @@ const Dashboard = () => {
                     setPrompt(tempPrompt);
                 } catch (error) {
                     console.error("Flow regeneration error:", error);
-                    alert("Failed to regenerate flow: " + error.message);
+                    const suggestion = error.message && error.message.includes('Failed to fetch')
+                        ? " — ensure the backend API is running at " + API_BASE_URL + " and CORS is configured."
+                        : "";
+                    alert("Failed to regenerate flow: " + error.message + suggestion);
                 } finally {
                     setIsGenerating(false);
                 }
