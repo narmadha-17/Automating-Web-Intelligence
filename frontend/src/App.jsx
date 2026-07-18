@@ -85,7 +85,7 @@ function App() {
             </button>
           </div>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-            Your key is saved locally
+            Set your Tavily API key here to enable web intelligence features. Your key is stored locally and never sent to any server.
           </p>
         </div>
 

@@ -227,12 +227,13 @@ JSON Structure (return ONLY this, no explanation):
                 last_node = "extract_1"
 
             qa_keywords = [
-                'qa', 'ask', 'find the best', 'summarize', 'compare',
-                'analyze', 'explain', 'describe', 'tell', 'what', 'news'
+                'qa', 'ask', 'summarize', 'compare',
+                'analyze', 'explain', 'describe', 'tell'
             ]
-            needs_qa = any(kw in p for kw in qa_keywords)
+            question_keywords = ['what', 'how', 'why']
+            needs_qa = any(kw in p for kw in qa_keywords) or any(qk in p for qk in question_keywords)
 
-            if needs_qa or len(prompt) > 10:
+            if needs_qa:
                 nodes.append({
                     "id": "qa_1", "type": "qa",
                     "position": {"x": 800, "y": 150},

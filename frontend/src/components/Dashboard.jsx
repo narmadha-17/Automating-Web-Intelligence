@@ -41,6 +41,7 @@ const Dashboard = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [originalPrompt, setOriginalPrompt] = useState('');
     const [flowGenerated, setFlowGenerated] = useState(false);
+    const canRunFlow = flowGenerated && nodes.length > 0;
 
     const onConnect = useCallback(
         (params) => setEdges((eds) => addEdge(params, eds)),
@@ -381,6 +382,11 @@ const Dashboard = () => {
     };
 
     const executeFlow = async () => {
+        if (!flowGenerated || nodes.length === 0) {
+            alert('Please generate a flow first by clicking Auto-Flow.');
+            return;
+        }
+
         setIsRunning(true);
 
         const roots = nodes.filter(node => getIncomers(node, nodes, edges).length === 0);
@@ -583,14 +589,15 @@ const Dashboard = () => {
                 {/* Run Button */}
                 <button
                     onClick={executeFlow}
-                    disabled={isRunning}
+                    disabled={isRunning || !canRunFlow}
+                    title={canRunFlow ? 'Run the generated flow' : 'Generate a flow first with Auto-Flow'}
                     style={{
                         padding: '0.7rem 1.8rem',
-                        background: isRunning ? '#4B5563' : 'linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%)',
+                        background: isRunning || !canRunFlow ? '#4B5563' : 'linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%)',
                         color: '#fff',
                         border: 'none',
                         borderRadius: '8px',
-                        cursor: isRunning ? 'not-allowed' : 'pointer',
+                        cursor: isRunning || !canRunFlow ? 'not-allowed' : 'pointer',
                         fontWeight: '700',
                         fontSize: '0.95rem',
                         transition: 'all 0.3s',

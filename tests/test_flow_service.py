@@ -117,6 +117,15 @@ class TestFlowGenerationServiceHeuristics:
         node_types = [n["type"] for n in result["nodes"]]
         assert "search" in node_types
 
+    def test_heuristic_search_and_extract_news(self, service):
+        """Test heuristic fallback for news search with extract intent."""
+        result = service._heuristic_fallback("find ai news and extract them")
+        
+        node_types = [n["type"] for n in result["nodes"]]
+        assert "search" in node_types
+        assert "extract" in node_types
+        assert "qa" not in node_types
+
     def test_heuristic_compare_query(self, service):
         """Test heuristic for compare queries."""
         result = service._heuristic_fallback("compare Python and JavaScript")
