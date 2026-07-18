@@ -4,6 +4,7 @@ import Search from './components/Search';
 import Extract from './components/Extract';
 import Crawl from './components/Crawl';
 import Map from './components/Map';
+import Dashboard from './components/Dashboard';
 import bearOpen from './assets/bear-eyes-open.png';
 import bearClosed from './assets/bear-eyes-closed.png';
 
@@ -24,6 +25,7 @@ function App() {
       case 'extract': return <Extract {...props} />;
       case 'crawl': return <Crawl {...props} />;
       case 'map': return <Map {...props} />;
+      case 'dashboard': return <Dashboard />;
       default: return <Search {...props} />;
     }
   };
@@ -83,7 +85,7 @@ function App() {
             </button>
           </div>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-            Your key is saved locally
+            Set your Tavily API key here to enable web intelligence features. Your key is stored locally and never sent to any server.
           </p>
         </div>
 
