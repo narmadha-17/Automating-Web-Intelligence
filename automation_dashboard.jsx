@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+﻿import React, { useState, useCallback, useRef } from 'react';
 import {
     ReactFlow,
     Controls,
@@ -305,7 +305,7 @@ const Dashboard = () => {
         } catch (error) {
             console.error("Flow generation error:", error);
             const suggestion = error.message && error.message.includes('Failed to fetch')
-                ? " — ensure the backend API is running at " + API_BASE_URL + " and CORS is configured."
+                ? " ΓÇö ensure the backend API is running at " + API_BASE_URL + " and CORS is configured."
                 : "";
             alert("Failed to generate flow: " + error.message + suggestion);
         } finally {
@@ -371,7 +371,7 @@ const Dashboard = () => {
                 } catch (error) {
                     console.error("Flow regeneration error:", error);
                     const suggestion = error.message && error.message.includes('Failed to fetch')
-                        ? " — ensure the backend API is running at " + API_BASE_URL + " and CORS is configured."
+                        ? " ΓÇö ensure the backend API is running at " + API_BASE_URL + " and CORS is configured."
                         : "";
                     alert("Failed to regenerate flow: " + error.message + suggestion);
                 } finally {
@@ -379,46 +379,6 @@ const Dashboard = () => {
                 }
             })();
         }, 100);
-    };
-
-    const getResultUrls = (result) => {
-        if (!result) return [];
-
-        if (typeof result === 'string') {
-            return result.startsWith('http') ? [result] : [];
-        }
-
-        if (Array.isArray(result)) {
-            return result.flatMap(item => {
-                if (typeof item === 'string' && item.startsWith('http')) return [item];
-                if (item?.url && typeof item.url === 'string') return [item.url];
-                if (item?.results && Array.isArray(item.results)) {
-                    return item.results
-                        .map(sub => (sub?.url && typeof sub.url === 'string' ? sub.url : null))
-                        .filter(url => url && url.startsWith('http'));
-                }
-                return [];
-            }).filter(Boolean);
-        }
-
-        if (result.url && typeof result.url === 'string' && result.url.startsWith('http')) {
-            return [result.url];
-        }
-
-        if (result.results && Array.isArray(result.results)) {
-            return result.results.flatMap(item => {
-                if (typeof item === 'string' && item.startsWith('http')) return [item];
-                if (item?.url && typeof item.url === 'string') return [item.url];
-                if (item?.results && Array.isArray(item.results)) {
-                    return item.results
-                        .map(sub => (sub?.url && typeof sub.url === 'string' ? sub.url : null))
-                        .filter(url => url && url.startsWith('http'));
-                }
-                return [];
-            }).filter(Boolean);
-        }
-
-        return [];
     };
 
     const executeFlow = async () => {
@@ -449,17 +409,28 @@ const Dashboard = () => {
             for (const parent of parents) {
                 const parentResult = nodeResults.get(parent.id);
                 if (parentResult) {
-                    const urlList = getResultUrls(parentResult);
-                    if (urlList.length > 0) {
-                        inputs.urls = urlList;
-                        inputs.url = urlList[0];
+                    // --- Map node: results is List[str] (plain URL strings) ---
+                    if (
+                        parentResult.results &&
+                        Array.isArray(parentResult.results) &&
+                        parentResult.results.length > 0 &&
+                        typeof parentResult.results[0] === 'string'
+                    ) {
+                        // Pass the list of URLs so Extract can fetch multiple at once
+                        const urlList = parentResult.results.filter(u => u.startsWith('http'));
+                        if (urlList.length > 0) {
+                            inputs.urls = urlList; // array passed to extract
+                            inputs.url = urlList[0]; // single fallback
+                        }
                     } else {
                         // Centralized text extraction logic with full fallback chain
                         const getBestText = (res) => {
                             if (!res) return null;
 
+                            // If there's a top-level AI answer, prioritize it
                             if (res.answer && res.answer !== "No AI answer provided") return res.answer;
 
+                            // Otherwise, aggregate content from all results
                             if (res.results && Array.isArray(res.results)) {
                                 const texts = res.results
                                     .map(r => r.answer || r.content || r.raw_content)
@@ -472,12 +443,12 @@ const Dashboard = () => {
 
                         const text = getBestText(parentResult);
                         if (text) inputs.context = (inputs.context ? inputs.context + "\n\n" : "") + text;
+
+                        // Extract single URL if relevant
+                        const url = parentResult.url || parentResult.results?.[0]?.url;
+                        if (url) inputs.url = url;
                     }
                 }
-            }
-
-            if (!currentNode.data.url && inputs.url && ['extract', 'crawl', 'map'].includes(currentNode.type)) {
-                updateNodeData(currentNode.id, { url: inputs.url });
             }
 
             const result = await runNode(currentNode, inputs);
@@ -523,7 +494,7 @@ const Dashboard = () => {
                         draggable
                         style={{ cursor: 'grab', padding: '0.6rem 1.2rem', background: 'rgba(100, 150, 255, 0.15)', borderRadius: '8px', border: '1.5px solid rgba(100, 150, 255, 0.3)', hover: { background: 'rgba(100, 150, 255, 0.25)' }, transition: 'all 0.2s', fontSize: '0.9rem', fontWeight: '600', color: '#60A5FA' }}
                     >
-                        🔍 Search
+                        ≡ƒöì Search
                     </div>
                     <div
                         className="dndnode"
@@ -531,7 +502,7 @@ const Dashboard = () => {
                         draggable
                         style={{ cursor: 'grab', padding: '0.6rem 1.2rem', background: 'rgba(100, 150, 255, 0.15)', borderRadius: '8px', border: '1.5px solid rgba(100, 150, 255, 0.3)', transition: 'all 0.2s', fontSize: '0.9rem', fontWeight: '600', color: '#60A5FA' }}
                     >
-                        🕷️ Crawl
+                        ≡ƒò╖∩╕Å Crawl
                     </div>
                     <div
                         className="dndnode output"
@@ -539,7 +510,7 @@ const Dashboard = () => {
                         draggable
                         style={{ cursor: 'grab', padding: '0.6rem 1.2rem', background: 'rgba(100, 150, 255, 0.15)', borderRadius: '8px', border: '1.5px solid rgba(100, 150, 255, 0.3)', transition: 'all 0.2s', fontSize: '0.9rem', fontWeight: '600', color: '#60A5FA' }}
                     >
-                        📄 Extract
+                        ≡ƒôä Extract
                     </div>
                     <div
                         className="dndnode output"
@@ -547,7 +518,7 @@ const Dashboard = () => {
                         draggable
                         style={{ cursor: 'grab', padding: '0.6rem 1.2rem', background: 'rgba(100, 150, 255, 0.15)', borderRadius: '8px', border: '1.5px solid rgba(100, 150, 255, 0.3)', transition: 'all 0.2s', fontSize: '0.9rem', fontWeight: '600', color: '#60A5FA' }}
                     >
-                        🗺️ Map
+                        ≡ƒù║∩╕Å Map
                     </div>
 
                 </div>
@@ -611,7 +582,7 @@ const Dashboard = () => {
                             e.target.style.boxShadow = '0 4px 12px rgba(168, 85, 247, 0.3)';
                         }}
                     >
-                        {isGenerating ? 'Generating...' : '✨ Auto-Flow'}
+                        {isGenerating ? 'Generating...' : 'Γ£¿ Auto-Flow'}
                     </button>
                 </div>
 
@@ -646,7 +617,7 @@ const Dashboard = () => {
                         e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
                     }}
                 >
-                    {isRunning ? '⏳ Running...' : '▶ Run Flow'}
+                    {isRunning ? 'ΓÅ│ Running...' : 'Γû╢ Run Flow'}
                 </button>
 
                 {/* Reload Button - appears when flow is generated */}
@@ -681,7 +652,7 @@ const Dashboard = () => {
                         }}
                         title="Generate a fresh flow with the same query"
                     >
-                        {isGenerating ? '⏳ Loading...' : '↻ Reload Flow'}
+                        {isGenerating ? 'ΓÅ│ Loading...' : 'Γå╗ Reload Flow'}
                     </button>
                 )}
             </div>

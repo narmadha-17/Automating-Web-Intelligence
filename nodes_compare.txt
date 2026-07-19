@@ -1,0 +1,104 @@
+﻿diff --git a/temp_automation_nodes.jsx b/frontend/src/components/Nodes.jsx
+index d2690fc..671c7cc 100644
+--- a/temp_automation_nodes.jsx
++++ b/frontend/src/components/Nodes.jsx
+@@ -149,7 +149,7 @@ const ResultDisplay = ({ result }) => {
+                         e.target.style.borderColor = 'rgba(212, 163, 115, 0.4)';
+                     }}
+                 >
+-                    {isExpanded ? 'Gσµ Collapse' : 'Gσ⌠ Expand'}
++                    {isExpanded ? 'Γåæ Collapse' : 'Γåô Expand'}
+                 </button>
+             )}
+         </div>
+@@ -166,7 +166,7 @@ export const SearchNode = memo(({ data, selected }) => {
+                 <Handle type="target" position={Position.Top} id="in" />
+ 
+                 <div style={titleStyle}>
+-                    <span style={{ fontSize: '1.5rem' }}>=â÷∞</span>
++                    <span style={{ fontSize: '1.5rem' }}>≡ƒöì</span>
+                     <strong style={{ fontSize: '1.1rem', color: '#D4A373' }}>Search</strong>
+                 </div>
+ 
+@@ -185,7 +185,7 @@ export const SearchNode = memo(({ data, selected }) => {
+ 
+                 <div style={statusStyle(data.status)}>
+                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+-                        {data.status === 'running' && <span className="animate-spin">Gεó</span>}
++                        {data.status === 'running' && <span className="animate-spin">Γî¢</span>}
+                         <span>{data.status ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : 'Idle'}</span>
+                     </span>
+                 </div>
+@@ -208,7 +208,7 @@ export const CrawlNode = memo(({ data, selected }) => {
+                 <Handle type="target" position={Position.Top} id="in" />
+ 
+                 <div style={titleStyle}>
+-                    <span style={{ fontSize: '1.5rem' }}>=â≥+n+┼</span>
++                    <span style={{ fontSize: '1.5rem' }}>≡ƒò╖∩╕Å</span>
+                     <strong style={{ fontSize: '1.1rem', color: '#D4A373' }}>Crawl</strong>
+                 </div>
+ 
+@@ -227,7 +227,7 @@ export const CrawlNode = memo(({ data, selected }) => {
+ 
+                 <div style={statusStyle(data.status)}>
+                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+-                        {data.status === 'running' && <span className="animate-spin">Gεó</span>}
++                        {data.status === 'running' && <span className="animate-spin">Γî¢</span>}
+                         <span>{data.status ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : 'Idle'}</span>
+                     </span>
+                 </div>
+@@ -250,7 +250,7 @@ export const ExtractNode = memo(({ data, selected }) => {
+                 <Handle type="target" position={Position.Top} id="in" />
+ 
+                 <div style={titleStyle}>
+-                    <span style={{ fontSize: '1.5rem' }}>=â⌠Σ</span>
++                    <span style={{ fontSize: '1.5rem' }}>≡ƒôä</span>
+                     <strong style={{ fontSize: '1.1rem', color: '#D4A373' }}>Extract</strong>
+                 </div>
+ 
+@@ -269,7 +269,7 @@ export const ExtractNode = memo(({ data, selected }) => {
+ 
+                 <div style={statusStyle(data.status)}>
+                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+-                        {data.status === 'running' && <span className="animate-spin">Gεó</span>}
++                        {data.status === 'running' && <span className="animate-spin">Γî¢</span>}
+                         <span>{data.status ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : 'Idle'}</span>
+                     </span>
+                 </div>
+@@ -292,7 +292,7 @@ export const MapNode = memo(({ data, selected }) => {
+                 <Handle type="target" position={Position.Top} id="in" />
+ 
+                 <div style={titleStyle}>
+-                    <span style={{ fontSize: '1.5rem' }}>=â∙ªn+┼</span>
++                    <span style={{ fontSize: '1.5rem' }}>≡ƒù║∩╕Å</span>
+                     <strong style={{ fontSize: '1.1rem', color: '#D4A373' }}>Map</strong>
+                 </div>
+ 
+@@ -311,7 +311,7 @@ export const MapNode = memo(({ data, selected }) => {
+ 
+                 <div style={statusStyle(data.status)}>
+                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+-                        {data.status === 'running' && <span className="animate-spin">Gεó</span>}
++                        {data.status === 'running' && <span className="animate-spin">Γî¢</span>}
+                         <span>{data.status ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : 'Idle'}</span>
+                     </span>
+                 </div>
+@@ -334,7 +334,7 @@ export const QANode = memo(({ data, selected }) => {
+                 <Handle type="target" position={Position.Top} id="in" />
+ 
+                 <div style={titleStyle}>
+-                    <span style={{ fontSize: '1.5rem' }}>=â║ß</span>
++                    <span style={{ fontSize: '1.5rem' }}>≡ƒºá</span>
+                     <strong style={{ fontSize: '1.1rem', color: '#D4A373' }}>Ask / QA</strong>
+                 </div>
+ 
+@@ -353,7 +353,7 @@ export const QANode = memo(({ data, selected }) => {
+ 
+                 <div style={statusStyle(data.status)}>
+                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+-                        {data.status === 'running' && <span className="animate-spin">Gεó</span>}
++                        {data.status === 'running' && <span className="animate-spin">Γî¢</span>}
+                         <span>{data.status ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : 'Idle'}</span>
+                     </span>
+                 </div>
+
